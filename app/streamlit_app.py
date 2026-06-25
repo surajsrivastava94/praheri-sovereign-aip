@@ -72,6 +72,14 @@ oag_mode = st.sidebar.toggle("OAG mode (structured objects)", value=True,
                              help="Off = naive RAG over flattened text, for the side-by-side.")
 st.sidebar.info("Sovereignty demo: this runs with no external network calls. "
                 "Try airplane mode during the pitch.")
+with st.sidebar.expander("🛡️ Verify sovereignty"):
+    from praheri.sovereignty import scan_egress
+    rep = scan_egress()
+    if rep["ok"]:
+        st.success("No external egress. Data never leaves the box.")
+    else:
+        st.error(f"External egress: {rep['external_endpoints']}")
+    st.caption("Local only: " + ", ".join(rep["local_endpoints"]))
 
 tabs = st.tabs(["🚨 Alert Queue", "🔎 Investigation", "✅ Approvals (MLRO)",
                 "📜 Audit Trail", "🧾 Procurement (vertical #2)"])

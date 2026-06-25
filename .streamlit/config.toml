@@ -1,0 +1,6 @@
+# Sovereignty: no telemetry, no external calls. Praheri runs fully on-prem.
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
