@@ -12,6 +12,15 @@ import streamlit as st
 
 from praheri import governance
 from praheri.governance import Actor
+from praheri.store import OntologyStore
+
+
+@st.cache_resource
+def get_store() -> OntologyStore:
+    return OntologyStore()
+
+
+store = get_store()
 
 st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
@@ -30,7 +39,24 @@ tabs = st.tabs(["🚨 Alert Queue", "🔎 Investigation", "✅ Approvals (MLRO)"
 
 with tabs[0]:
     st.subheader("Open alerts (sorted by score)")
-    st.write("TODO 3.1: list alerts from store.query_objects('Alert'); click to select.")
+    alerts = store.query_objects("Alert")
+    alerts.sort(key=lambda a: a["properties"]["score"], reverse=True)
+    if not alerts:
+        st.warning("No alerts. Run `python -m praheri.generate` to seed the demo bank.")
+    for a in alerts:
+        p = a["properties"]
+        score = p["score"]
+        cols = st.columns([1, 3, 3, 2, 2])
+        cols[0].metric("Score", f"{score:.0f}")
+        cols[1].write(f"**{p['alert_id']}**")
+        cols[2].write(f"`{p['account_id']}`")
+        cols[3].write(p["rule"])
+        # High-score (ring) alerts get a flag so the demo entry points pop.
+        cols[3].caption("🔴 high risk" if score >= 70 else "🟡 routine")
+        if cols[4].button("Investigate →", key=f"sel_{p['alert_id']}"):
+            st.session_state["selected_alert_id"] = p["alert_id"]
+            st.session_state["selected_account_id"] = p["account_id"]
+            st.success(f"Selected {p['alert_id']} — open the Investigation tab.")
 
 with tabs[1]:
     st.subheader("Investigation")
