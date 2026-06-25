@@ -134,3 +134,15 @@ def request_account_freeze(actor: Actor, account_id: str, reason: str):
 def file_str(actor: Actor, case_id: str, narrative: str):
     _store.file_str_record(case_id, narrative)
     return f"STR filed for {case_id}"
+
+
+# --------------------------------------------------- procurement vertical (U12)
+# Same @action engine, new vertical. Over-budget POs hit the SAME approval gate as
+# request_account_freeze — proving the governance layer is workflow-agnostic.
+@action(requires_role="analyst", requires_approval=True)
+def approve_purchase_order(actor: Actor, requisition_id: str, amount: float,
+                           budget_remaining: float):
+    over = amount > budget_remaining
+    return (f"PO {requisition_id} approved for INR{amount:,.0f}"
+            if not over else
+            f"PO {requisition_id} (INR{amount:,.0f}) EXCEEDS budget — escalated")

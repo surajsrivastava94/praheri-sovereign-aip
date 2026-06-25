@@ -190,6 +190,29 @@ with tabs[3]:
 
 with tabs[4]:
     st.subheader("Procurement — same engine, different ontology")
-    st.write("TODO 6.1: prove the platform thesis. Requisition/Vendor/Contract/Budget ontology, "
-             "one action approve_purchase_order behind a budget-threshold gate, reusing "
-             "agent + governance + store unchanged.")
+    st.caption("Vertical #2 proves the platform thesis: the SAME governance/audit "
+               "engine, a new ontology (Requisition/Vendor/Budget) and one action.")
+    from praheri import models_procurement as proc
+
+    budget = proc.DEMO_BUDGET
+    remaining = budget.cap - budget.spent
+    st.metric(f"Budget {budget.budget_id} ({budget.department})",
+              f"₹{remaining:,.0f} remaining", f"cap ₹{budget.cap:,.0f}")
+
+    for req in proc.DEMO_REQUISITIONS:
+        vendor = next(v for v in proc.DEMO_VENDORS if v.vendor_id == req.vendor_id)
+        over = req.amount > remaining
+        cols = st.columns([3, 2, 2, 2])
+        cols[0].write(f"**{req.requisition_id}** · {req.description}")
+        cols[1].write(f"`{vendor.name}`")
+        cols[2].write(f"₹{req.amount:,.0f}")
+        cols[2].caption("🔴 over budget" if over else "🟢 within budget")
+        if cols[3].button("Submit PO", key=f"po_{req.requisition_id}"):
+            r = governance.approve_purchase_order(
+                actor, requisition_id=req.requisition_id, amount=req.amount,
+                budget_remaining=remaining)
+            if r["status"] == "PENDING_APPROVAL":
+                st.warning(f"{r['status']} — over budget, routed to MLRO "
+                           "(same approval gate as account freeze).")
+            else:
+                st.success(r)
