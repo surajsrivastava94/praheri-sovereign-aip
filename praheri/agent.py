@@ -344,6 +344,38 @@ Respond as STRICT JSON only:
   "rationale": "... cite object_ids ...", "cited_ids": ["..."]}}"""
 
 
+STR_PROMPT = """\
+Draft a concise Suspicious Transaction Report (STR) narrative for a compliance file.
+
+Typology: {typology}
+Detected signals: {signals}
+Matched policy clause: {policy}
+Key object_ids (cite these): {cited}
+
+Write 4-6 sentences in formal regulatory tone. You MUST:
+- Describe the suspicious pattern factually.
+- Cite the specific object_ids (accounts, transactions, devices) as evidence.
+- Reference the matched policy/typology by name.
+- State why the activity lacks apparent lawful purpose.
+Do NOT invent ids or evidence beyond those listed. Do NOT mention tool names,
+internal function names, or "not specified" placeholders. Output the narrative
+text only (no preamble, no 'Propose' line)."""
+
+
+def _draft_str_narrative(typology: str, signals: list[dict], policy: list[dict],
+                         cited: list[str], store: OntologyStore) -> str:
+    """[Llama] Draft the STR narrative grounded in cited object_ids + policy clause."""
+    signal_text = "; ".join(s["detail"] for s in signals) or "n/a"
+    policy_text = policy[0]["text"][:600] if policy else "n/a"
+    prompt = STR_PROMPT.format(
+        typology=typology, signals=signal_text, policy=policy_text,
+        cited=", ".join(cited[:12]))
+    resp = call_llama(
+        [{"role": "system", "content": SYSTEM_PROMPT},
+         {"role": "user", "content": prompt}], tools=None, store=store)
+    return (resp["message"].get("content") or "").strip()
+
+
 def _parse_json_block(text: str) -> dict:
     """Pull the first JSON object out of a model response (8B often wraps it)."""
     text = (text or "").strip()
@@ -422,6 +454,11 @@ def investigate(alert_id: str, store: OntologyStore | None = None,
     if signals and rec == "CLEAR":
         rec = "FILE"
 
+    # [Llama] draft the STR narrative when the case warrants filing/escalation (U9).
+    str_narrative = None
+    if rec in ("FILE", "ESCALATE") and signals:
+        str_narrative = _draft_str_narrative(typology, signals, policy, cited, store)
+
     result = {
         "alert_id": alert_id,
         "account_id": account_id,
@@ -433,7 +470,7 @@ def investigate(alert_id: str, store: OntologyStore | None = None,
         "rationale": decision.get("rationale", ""),
         "cited_ids": cited,
         "policy_citations": policy,
-        "str_narrative": None,   # drafted in U9
+        "str_narrative": str_narrative,
         "source": "live",
     }
 

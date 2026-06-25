@@ -122,3 +122,25 @@ def test_signals_evidence_ids_are_real(store):
     sigs = agent.compute_signals(store, "ACC-BENEF-STRUCT", touched)
     for s in sigs:
         assert s["evidence_ids"], "signal has no evidence"
+
+
+# ---------------- U9: STR narrative ----------------
+@live
+def test_str_narrative_cites_real_ids(store):
+    out = agent.investigate("ALERT-R001", store=store, use_cache=False)
+    assert out["str_narrative"], "no STR drafted for a FILE recommendation"
+    # at least one cited mule id appears in the narrative
+    assert any(i in out["str_narrative"] for i in out["cited_ids"])
+    # narrative should not leak internal tool names
+    assert "search_policy" not in out["str_narrative"]
+
+
+def test_no_str_when_no_signals(monkeypatch, store):
+    """A benign alert (no signals) drafts no STR."""
+    # force traversal to a non-ring account with no signals
+    monkeypatch.setattr(agent, "compute_signals", lambda *a, **k: [])
+    fake = {"message": {"content": '{"typology":"none","recommendation":"CLEAR",'
+                        '"rationale":"benign","cited_ids":[]}'}, "trace": []}
+    monkeypatch.setattr(agent, "call_llama", lambda *a, **k: fake)
+    out = agent.investigate("ALERT-R002", store=store, use_cache=False)
+    assert out["str_narrative"] is None
