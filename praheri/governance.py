@@ -1,0 +1,130 @@
+"""Governance layer: audit log + actions + approval gate. See BUILD_BIBLE.md §4.
+
+The SECOND design decision that makes this "AIP, not a chatbot": the model never
+writes data directly. All mutations go through @action. High-stakes actions require
+human approval before they execute. Everything is audited (append-only).
+
+This module is intended to be fairly complete and runnable.
+"""
+from __future__ import annotations
+
+import json
+import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable
+
+AUDIT_PATH = Path("audit_log.jsonl")
+MODEL_NAME = "llama3.1:8b"  # surfaced in every audit row; keep in sync with agent.py
+
+
+@dataclass
+class Actor:
+    id: str
+    role: str  # "analyst" | "mlro"
+
+
+# ---------------------------------------------------------------- audit log
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def log(event: str, actor: Actor, action: str = "", params: dict | None = None,
+        result: Any = None) -> str:
+    """Append one immutable audit row. Returns the row id."""
+    row_id = uuid.uuid4().hex[:12]
+    row = {
+        "id": row_id, "ts": _now(), "event": event, "actor": actor.id,
+        "role": actor.role, "action": action, "params": params or {},
+        "result": result, "model": MODEL_NAME,
+    }
+    with AUDIT_PATH.open("a") as f:
+        f.write(json.dumps(row, default=str) + "\n")
+    return row_id
+
+
+def read_audit() -> list[dict]:
+    if not AUDIT_PATH.exists():
+        return []
+    return [json.loads(line) for line in AUDIT_PATH.read_text().splitlines() if line.strip()]
+
+
+# ------------------------------------------------------- pending approvals
+@dataclass
+class Pending:
+    items: dict[str, dict] = field(default_factory=dict)
+
+    def add(self, ref: str, action: str, params: dict, proposed_by: str) -> None:
+        self.items[ref] = {"ref": ref, "action": action, "params": params,
+                           "proposed_by": proposed_by, "ts": _now(), "status": "pending"}
+
+    def list_pending(self) -> list[dict]:
+        return [i for i in self.items.values() if i["status"] == "pending"]
+
+
+PENDING = Pending()
+# Registry so the approver can re-invoke the underlying function on approval.
+_EXECUTORS: dict[str, Callable] = {}
+
+
+# ------------------------------------------------------------ @action
+def action(requires_role: str, requires_approval: bool = False):
+    """Decorator. Enforces role, logs proposal, gates high-stakes actions."""
+    def wrap(fn: Callable):
+        _EXECUTORS[fn.__name__] = fn
+
+        def inner(actor: Actor, **params):
+            if actor.role not in (requires_role, "mlro"):
+                raise PermissionError(f"{actor.role} cannot {fn.__name__}")
+            ref = log("ACTION_PROPOSED", actor, fn.__name__, params)
+            if requires_approval:
+                PENDING.add(ref, fn.__name__, params, actor.id)
+                return {"status": "PENDING_APPROVAL", "ref": ref}
+            result = fn(actor=actor, **params)
+            log("ACTION_EXECUTED", actor, fn.__name__, params, result=result)
+            return {"status": "EXECUTED", "ref": ref, "result": result}
+        inner.__name__ = fn.__name__
+        return inner
+    return wrap
+
+
+def approve(ref: str, mlro: Actor) -> dict:
+    """MLRO approves a pending action; it executes and is audited."""
+    item = PENDING.items.get(ref)
+    if not item or item["status"] != "pending":
+        raise ValueError("no such pending action")
+    fn = _EXECUTORS[item["action"]]
+    result = fn(actor=mlro, **item["params"])
+    item["status"] = "approved"
+    log("ACTION_APPROVED_AND_EXECUTED", mlro, item["action"], item["params"], result=result)
+    return {"status": "EXECUTED", "ref": ref, "result": result}
+
+
+# --------------------------------------------------------------- the actions
+# TODO(playbook step 5.1): wire these to store.py mutations.
+@action(requires_role="analyst")
+def clear_alert(actor: Actor, alert_id: str, rationale: str):
+    return f"alert {alert_id} cleared"
+
+
+@action(requires_role="analyst")
+def escalate_alert_to_case(actor: Actor, alert_id: str, reason: str):
+    return f"alert {alert_id} escalated to case"
+
+
+@action(requires_role="analyst")
+def add_case_note(actor: Actor, case_id: str, note: str):
+    return f"note added to {case_id}"
+
+
+@action(requires_role="analyst", requires_approval=True)
+def request_account_freeze(actor: Actor, account_id: str, reason: str):
+    # TODO: set Account.status = "frozen" in the store
+    return f"account {account_id} FROZEN"
+
+
+@action(requires_role="analyst", requires_approval=True)
+def file_str(actor: Actor, case_id: str, narrative: str):
+    # TODO: persist STR narrative on the Case; mark status "filed"
+    return f"STR filed for {case_id}"
