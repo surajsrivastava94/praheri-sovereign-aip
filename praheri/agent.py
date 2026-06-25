@@ -148,6 +148,26 @@ def call_llama(messages: list[dict], tools: list[dict] | None = None,
 
 CACHE_DIR = Path("demo_cache")
 
+ASK_SYSTEM = """\
+You are Praheri, an AML investigation copilot. Answer the analyst's question by
+READING the ontology with your tools (query_objects, get_linked_objects,
+search_policy). Always call a tool to ground your answer in real objects before
+responding. Cite object_ids. Never invent data.
+"""
+
+
+def ask(question: str, store: OntologyStore | None = None) -> dict[str, Any]:
+    """Free-form analyst Q&A — a GENUINE model-driven tool-calling loop (KTD-1).
+    Unlike investigate() (Python-orchestrated), here Llama itself decides which
+    tools to call. Returns {answer, trace} so the UI can show the live tool calls.
+    """
+    store = store or OntologyStore()
+    out = call_llama(
+        [{"role": "system", "content": ASK_SYSTEM},
+         {"role": "user", "content": question}],
+        tools=TOOLS, store=store)
+    return {"answer": out["message"].get("content", ""), "trace": out["trace"]}
+
 
 # ---- [Python] deterministic triage + traversal (the orchestrated half of KTD-1) ----
 def traverse_ring(store: OntologyStore, account_id: str,

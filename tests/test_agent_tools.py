@@ -71,3 +71,12 @@ def test_ollama_unreachable_raises_clean_error(monkeypatch):
     monkeypatch.setattr(agent.requests, "post", boom)
     with pytest.raises(agent.LlamaUnavailable):
         agent._post([{"role": "user", "content": "hi"}], None)
+
+
+# ---------------- U6: Ask Praheri live loop ----------------
+@live
+def test_ask_uses_tools_and_returns_trace():
+    out = agent.ask("Which accounts share a device with ACC-DEV-01?")
+    assert "answer" in out and "trace" in out
+    assert out["trace"], "ask() made no tool calls — loop not genuine"
+    assert any(t["result_count"] > 0 for t in out["trace"])
