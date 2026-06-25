@@ -248,8 +248,54 @@ class OntologyStore:
 
 # ---------------------------------------------------- guarded mutators (U10)
 # The ONLY write path. governance.@action functions call these; nothing else should.
-def freeze_account(store: OntologyStore, account_id: str) -> bool:
+# A module-level default store so governance actions can mutate without threading a
+# store through every call (single-process demo).
+_DEFAULT: OntologyStore | None = None
+
+
+def default_store() -> OntologyStore:
+    global _DEFAULT
+    if _DEFAULT is None:
+        _DEFAULT = OntologyStore()
+    return _DEFAULT
+
+
+def freeze_account(account_id: str, store: OntologyStore | None = None) -> bool:
+    store = store or default_store()
     cur = store.conn.execute(
         "UPDATE accounts SET status='frozen' WHERE account_id=?", (account_id,))
     store.conn.commit()
     return cur.rowcount > 0
+
+
+def set_alert_status(alert_id: str, status: str,
+                     store: OntologyStore | None = None) -> bool:
+    store = store or default_store()
+    cur = store.conn.execute(
+        "UPDATE alerts SET status=? WHERE alert_id=?", (status, alert_id))
+    store.conn.commit()
+    return cur.rowcount > 0
+
+
+def file_str_record(case_id: str, narrative: str,
+                    store: OntologyStore | None = None) -> bool:
+    """Persist an STR: upsert a Case row carrying the narrative, marked 'filed'."""
+    store = store or default_store()
+    store.conn.execute(
+        "INSERT INTO cases (case_id, alert_ids, assigned_to, status, decision, "
+        "narrative, created_at) VALUES (?,?,?,?,?,?,datetime('now')) "
+        "ON CONFLICT(case_id) DO UPDATE SET status='filed', narrative=excluded.narrative",
+        (case_id, "[]", "mlro", "filed", "file", narrative))
+    store.conn.commit()
+    return True
+
+
+def add_note(case_id: str, note: str, store: OntologyStore | None = None) -> bool:
+    store = store or default_store()
+    store.conn.execute(
+        "INSERT INTO cases (case_id, alert_ids, assigned_to, status, decision, "
+        "narrative, created_at) VALUES (?,?,?,?,?,?,datetime('now')) "
+        "ON CONFLICT(case_id) DO UPDATE SET narrative=excluded.narrative",
+        (case_id, "[]", None, "open", None, note))
+    store.conn.commit()
+    return True

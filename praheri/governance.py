@@ -102,29 +102,35 @@ def approve(ref: str, mlro: Actor) -> dict:
 
 
 # --------------------------------------------------------------- the actions
-# TODO(playbook step 5.1): wire these to store.py mutations.
+# Mutations go ONLY through store.py guarded mutators — never direct SQL here.
+from praheri import store as _store  # noqa: E402
+
+
 @action(requires_role="analyst")
 def clear_alert(actor: Actor, alert_id: str, rationale: str):
+    _store.set_alert_status(alert_id, "closed")
     return f"alert {alert_id} cleared"
 
 
 @action(requires_role="analyst")
 def escalate_alert_to_case(actor: Actor, alert_id: str, reason: str):
+    _store.set_alert_status(alert_id, "in_review")
     return f"alert {alert_id} escalated to case"
 
 
 @action(requires_role="analyst")
 def add_case_note(actor: Actor, case_id: str, note: str):
+    _store.add_note(case_id, note)
     return f"note added to {case_id}"
 
 
 @action(requires_role="analyst", requires_approval=True)
 def request_account_freeze(actor: Actor, account_id: str, reason: str):
-    # TODO: set Account.status = "frozen" in the store
-    return f"account {account_id} FROZEN"
+    ok = _store.freeze_account(account_id)
+    return f"account {account_id} FROZEN" if ok else f"account {account_id} not found"
 
 
 @action(requires_role="analyst", requires_approval=True)
 def file_str(actor: Actor, case_id: str, narrative: str):
-    # TODO: persist STR narrative on the Case; mark status "filed"
+    _store.file_str_record(case_id, narrative)
     return f"STR filed for {case_id}"
