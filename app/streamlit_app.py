@@ -8,7 +8,13 @@ TODO(playbook steps 3.1, 5.2, 6.1, 6.2): wire each tab to the modules.
 """
 from __future__ import annotations
 
+import sys
 import tempfile
+from pathlib import Path
+
+# Streamlit puts this script's dir (app/) on sys.path, not the repo root, so the
+# praheri package isn't importable by default. Add the repo root explicitly.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -175,7 +181,7 @@ with tabs[2]:
 with tabs[3]:
     st.subheader("Immutable audit trail")
     rows = governance.read_audit()
-    st.dataframe(rows if rows else [{"info": "no audit entries yet"}], use_container_width=True)
+    st.dataframe(rows if rows else [{"info": "no audit entries yet"}], width="stretch")
 
 with tabs[4]:
     st.subheader("Procurement — same engine, different ontology")
