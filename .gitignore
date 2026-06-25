@@ -24,3 +24,8 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# generated / runtime artifacts
+praheri.db
+audit_log.jsonl
+demo_cache/
