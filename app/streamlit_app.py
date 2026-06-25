@@ -140,6 +140,27 @@ with tabs[1]:
                 st.markdown("##### Draft STR narrative")
                 st.write(inv["str_narrative"])
 
+            # --- OAG vs RAG side-by-side (U13): the differentiator ---
+            with st.expander("⚖️ OAG vs RAG — why structured objects win"):
+                if st.button("Run side-by-side comparison", key="oag_rag"):
+                    cL, cR = st.columns(2)
+                    with cL:
+                        st.markdown("**🟢 OAG (structured objects + links)**")
+                        st.success(f"{inv['typology']} → {inv['recommendation']}")
+                        st.write(inv["rationale"])
+                        st.caption("Traversed the ring via explicit links; "
+                                   "cites real object_ids.")
+                    with cR:
+                        st.markdown("**🔴 RAG (flattened text, links stripped)**")
+                        with st.spinner("RAG over text chunks…"):
+                            try:
+                                rag = agent.investigate_rag(alert_id)
+                                st.warning(rag["answer"])
+                                st.caption("Same facts as prose — but the links are "
+                                           "gone, so it can't reconstruct the ring.")
+                            except agent.LlamaUnavailable as e:
+                                st.error(str(e))
+
             # --- governed action buttons (full wiring in U10/U11) ---
             st.markdown("##### Actions")
             b1, b2, b3, b4 = st.columns(4)

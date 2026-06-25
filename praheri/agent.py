@@ -156,6 +156,53 @@ responding. Cite object_ids. Never invent data.
 """
 
 
+def flatten_to_text(touched: list[dict]) -> str:
+    """Flatten structured objects into naive text chunks with LINKS STRIPPED — what
+    a plain text-RAG system would feed the model. This is the OAG-vs-RAG handicap:
+    same facts, but the relationships (who sent to whom, shared device) are gone, so
+    the model can't traverse the ring. Used for the side-by-side demo (U13)."""
+    lines = []
+    for o in touched:
+        p = o["properties"]
+        if o["type"] == "Account":
+            lines.append(f"Account {o['id']} is a {p.get('type','')} account at "
+                         f"{p.get('branch','')} with balance {p.get('balance','')}.")
+        elif o["type"] == "Transaction":
+            lines.append(f"There was a transaction of {p.get('amount','')} "
+                         f"{p.get('currency','')} via {p.get('channel','')}.")
+        elif o["type"] == "Device":
+            lines.append(f"A device with IP {p.get('ip','')} was seen.")
+        elif o["type"] == "Customer":
+            lines.append(f"Customer {p.get('name','')} has KYC rating "
+                         f"{p.get('kyc_risk_rating','')}.")
+    # Shuffle-free but link-free: the model sees facts, not the graph.
+    return "\n".join(lines)
+
+
+RAG_PROMPT = """\
+You are an AML analyst. Based ONLY on these case notes, is there a fraud ring, and
+what is the typology? Recommend CLEAR, ESCALATE, or FILE in 2-3 sentences.
+
+Case notes:
+{notes}"""
+
+
+def investigate_rag(alert_id: str, store: OntologyStore | None = None) -> dict[str, Any]:
+    """The RAG comparison path: same ring, flattened to text (links stripped). Shows
+    why OAG wins — the model gets facts but cannot reconstruct the relationships."""
+    store = store or OntologyStore()
+    alert = store.get_object("Alert", alert_id)
+    if not alert:
+        raise ValueError(f"no such alert: {alert_id}")
+    touched = traverse_ring(store, alert["properties"]["account_id"])
+    notes = flatten_to_text(touched)[:6000]
+    resp = call_llama(
+        [{"role": "system", "content": "You are an AML analyst working from text notes."},
+         {"role": "user", "content": RAG_PROMPT.format(notes=notes)}],
+        tools=None, store=store)
+    return {"answer": (resp["message"].get("content") or "").strip(), "mode": "RAG"}
+
+
 def ask(question: str, store: OntologyStore | None = None) -> dict[str, Any]:
     """Free-form analyst Q&A — a GENUINE model-driven tool-calling loop (KTD-1).
     Unlike investigate() (Python-orchestrated), here Llama itself decides which

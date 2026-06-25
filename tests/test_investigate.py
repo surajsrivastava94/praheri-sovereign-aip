@@ -144,3 +144,20 @@ def test_no_str_when_no_signals(monkeypatch, store):
     monkeypatch.setattr(agent, "call_llama", lambda *a, **k: fake)
     out = agent.investigate("ALERT-R002", store=store, use_cache=False)
     assert out["str_narrative"] is None
+
+
+# ---------------- U13: OAG vs RAG ----------------
+def test_flatten_strips_links(store):
+    touched = agent.traverse_ring(store, "ACC-DEV-01")
+    text = agent.flatten_to_text(touched)
+    assert isinstance(text, str) and text
+    # flattened text must NOT carry the structured link maps (that's the handicap)
+    assert "linked_ids" not in text
+    assert "used_by" not in text
+
+
+@live
+def test_rag_path_returns_answer(store):
+    rag = agent.investigate_rag("ALERT-R005", store=store)
+    assert rag["mode"] == "RAG"
+    assert rag["answer"]
