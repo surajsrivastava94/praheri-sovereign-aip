@@ -222,19 +222,122 @@ def _compact_objects(touched: list[dict], limit: int = 40) -> list[dict]:
     return out
 
 
+# Threshold for "structuring" sub-threshold deposits — mirrors generate + policy.
+STRUCTURING_THRESHOLD = 50_000
+
+
+def compute_signals(store: OntologyStore, account_id: str,
+                    touched: list[dict]) -> list[dict]:
+    """[Python] Deterministically detect typology signatures over the ring objects.
+
+    This is the engine half of the hybrid (KTD-1): a real AML system computes the
+    rule hits — it does not hand an analyst raw rows and hope they spot the pattern.
+    The 8B model reliably *confirms and narrates* a computed signal, but is unreliable
+    at *deriving* it (e.g. aggregating that each sender is a mule fed by sub-threshold
+    deposits). We compute; the model judges. Each signal cites real object_ids.
+    """
+    signals: list[dict] = []
+    ring_accounts = {o["id"] for o in touched if o["type"] == "Account"}
+    devices = [o for o in touched if o["type"] == "Device"]
+
+    # --- Signal A: structuring / smurfing -------------------------------------
+    # Query the store directly for each ring account's sub-threshold inbound
+    # deposits — these sit beyond the traversal horizon, so we must look them up,
+    # not rely on what BFS happened to reach.
+    mules: dict[str, list[str]] = {}
+    for acct in ring_accounts:
+        deposits = [t["id"] for t in store.query_objects("Transaction", to_account=acct)
+                    if t["properties"]["amount"] < STRUCTURING_THRESHOLD]
+        if len(deposits) >= 5:
+            mules[acct] = deposits
+    if mules:
+        evidence = sorted(mules)[:6]
+        sample_txns = [tid for tids in list(mules.values())[:3] for tid in tids[:2]]
+        signals.append({
+            "typology": "structuring",
+            "detail": f"{len(mules)} mule account(s) each received >=5 sub-"
+                      f"INR{STRUCTURING_THRESHOLD:,} deposits then funnelled lumps onward "
+                      f"— classic smurfing.",
+            "evidence_ids": evidence + sample_txns,
+        })
+
+    # --- Signal B: circular layering ------------------------------------------
+    # Gather ALL transactions among the ring accounts (query, don't depend on BFS
+    # depth) and detect a directed cycle (A->B->C->A).
+    edges: set[tuple[str, str]] = set()
+    for acct in ring_accounts:
+        for t in store.query_objects("Transaction", from_account=acct):
+            to = t["properties"]["to_account"]
+            if to in ring_accounts:
+                edges.add((acct, to))
+    if len(ring_accounts) >= 3 and _has_cycle(edges, ring_accounts):
+        cycle_nodes = sorted({a for e in edges for a in e})[:6]
+        signals.append({
+            "typology": "circular_layering",
+            "detail": "Funds move in a closed loop among these accounts "
+                      "(A->B->C->A) with little economic substance.",
+            "evidence_ids": cycle_nodes,
+        })
+
+    # --- Signal C: shared-device ring -----------------------------------------
+    for d in devices:
+        users = d["linked_ids"].get("used_by", [])
+        if len(users) >= 5:
+            signals.append({
+                "typology": "shared_device_ring",
+                "detail": f"{len(users)} ostensibly unrelated accounts transact from "
+                          f"one device ({d['id']}) — linked-identity ring.",
+                "evidence_ids": [d["id"]] + sorted(users)[:8],
+            })
+
+    # Lead with the most distinctive typology so the headline matches the demo beat.
+    _priority = {"shared_device_ring": 0, "structuring": 1, "circular_layering": 2}
+    signals.sort(key=lambda s: _priority.get(s["typology"], 9))
+    return signals
+
+
+def _has_cycle(edges: set[tuple[str, str]], nodes: set[str]) -> bool:
+    """True if a directed cycle exists within `nodes` given `edges`."""
+    adj: dict[str, list[str]] = {}
+    for a, b in edges:
+        if a in nodes and b in nodes:
+            adj.setdefault(a, []).append(b)
+    WHITE, GREY, BLACK = 0, 1, 2
+    color = {n: WHITE for n in nodes}
+
+    def dfs(n: str) -> bool:
+        color[n] = GREY
+        for m in adj.get(n, []):
+            if color[m] == GREY:
+                return True
+            if color[m] == WHITE and dfs(m):
+                return True
+        color[n] = BLACK
+        return False
+
+    return any(color[n] == WHITE and dfs(n) for n in nodes)
+
+
 DECIDE_PROMPT = """\
 You are reviewing a potential AML fraud ring assembled from a bank's ontology.
-Below are the STRUCTURED OBJECTS (accounts, transactions, devices, counterparties)
-reachable from the alerted account, with their links.
 
-Alert: {alert}
-Ring objects (JSON): {objects}
+The bank's detection engine has ALREADY COMPUTED the following typology signals
+from the structured objects (these are confirmed rule hits, not speculation):
+
+DETECTED SIGNALS:
+{signals}
+
+Supporting ring objects (JSON, for reference): {objects}
 Policy evidence: {policy}
 
+Your job is to CONFIRM and NARRATE these signals — not to re-derive them. The
+signals above are computed facts; treat them as established evidence.
+
 Tasks:
-1. Classify the typology: one of structuring, circular_layering, shared_device_ring, none.
-2. Recommend exactly one disposition: CLEAR, ESCALATE, or FILE.
-3. Justify in 2-3 sentences, CITING specific object_ids from the ring above.
+1. State the typology (use the detected signal; if multiple, pick the strongest).
+2. Recommend a disposition: FILE if a signal clearly matches a money-laundering
+   typology, ESCALATE if signals are weak/ambiguous, CLEAR only if no signal fired.
+3. Justify in 2-3 sentences, CITING the specific object_ids from the signals.
 
 Respond as STRICT JSON only:
 {{"typology": "...", "recommendation": "CLEAR|ESCALATE|FILE",
@@ -282,14 +385,20 @@ def investigate(alert_id: str, store: OntologyStore | None = None,
     summary = _ring_summary(touched)
     valid_ids = {o["id"] for o in touched}
 
+    # [Python] deterministically detect typology signals (the engine half of KTD-1)
+    signals = compute_signals(store, account_id, touched)
+
     # [Evidence] policy lookup (search_policy degrades gracefully pre-U8)
     policy = _dispatch_tool("search_policy",
                             {"query": alert["properties"]["rule"]}, store)
 
-    # [Llama] classify + decide over the STRUCTURED objects
+    # [Llama] confirm + narrate over the COMPUTED signals + structured objects
+    signal_text = "\n".join(
+        f"- [{s['typology']}] {s['detail']} (object_ids: {', '.join(s['evidence_ids'])})"
+        for s in signals) or "- No typology signals fired."
     prompt = DECIDE_PROMPT.format(
-        alert=json.dumps(alert["properties"], default=str),
-        objects=json.dumps(_compact_objects(touched), default=str)[:9000],
+        signals=signal_text,
+        objects=json.dumps(_compact_objects(touched), default=str)[:6000],
         policy=json.dumps(policy, default=str)[:1500])
     resp = call_llama(
         [{"role": "system", "content": SYSTEM_PROMPT},
@@ -298,16 +407,28 @@ def investigate(alert_id: str, store: OntologyStore | None = None,
 
     # Enforce object_id citations: keep only ids that actually exist in the ring.
     cited = [i for i in decision.get("cited_ids", []) if i in valid_ids]
+    # Always include the signal evidence ids so the narrative is grounded even if
+    # the model under-cites.
+    signal_ids = [i for s in signals for i in s["evidence_ids"] if i in valid_ids]
+    cited = list(dict.fromkeys(cited + signal_ids))[:12]
+
     rec = decision.get("recommendation", "ESCALATE").upper()
     if rec not in ("CLEAR", "ESCALATE", "FILE"):
         rec = "ESCALATE"
+    # Deterministic floor: a fired signal is a confirmed typology — never CLEAR it,
+    # and a strong signal warrants FILE. The model can escalate FILE->ESCALATE in
+    # ambiguity but cannot downgrade a real ring to CLEAR (golden rule #4 posture).
+    typology = signals[0]["typology"] if signals else decision.get("typology", "none")
+    if signals and rec == "CLEAR":
+        rec = "FILE"
 
     result = {
         "alert_id": alert_id,
         "account_id": account_id,
         "objects_touched": [o["id"] for o in touched],
         "ring_summary": summary,
-        "typology": decision.get("typology", "unknown"),
+        "signals": signals,
+        "typology": typology,
         "recommendation": rec,
         "rationale": decision.get("rationale", ""),
         "cited_ids": cited,

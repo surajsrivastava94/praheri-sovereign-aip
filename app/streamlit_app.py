@@ -128,6 +128,11 @@ with tabs[1]:
             ring_accounts = [i for i in inv["objects_touched"] if i.startswith("ACC-")]
             render_ring_graph(ring_accounts, highlight)
 
+            if inv.get("signals"):
+                st.markdown("##### 🚦 Detected typology signals (engine)")
+                for s in inv["signals"]:
+                    st.markdown(f"- **{s['typology']}** — {s['detail']}")
+
             st.markdown("##### Rationale (cited object_ids)")
             st.write(inv["rationale"])
             st.caption("Cited: " + ", ".join(f"`{i}`" for i in inv["cited_ids"]))

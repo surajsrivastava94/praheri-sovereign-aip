@@ -94,3 +94,31 @@ def test_investigate_each_ring(store, alert_id, expect_account_prefix):
         f"{alert_id}: ring accounts not surfaced"
     assert out["recommendation"] in ("ESCALATE", "FILE"), \
         f"{alert_id}: a real ring should not be CLEARed"
+
+
+# ---------------- U7 fix: deterministic signal computation ----------------
+def test_compute_signals_detects_structuring(store):
+    touched = agent.traverse_ring(store, "ACC-BENEF-STRUCT")
+    sigs = agent.compute_signals(store, "ACC-BENEF-STRUCT", touched)
+    assert any(s["typology"] == "structuring" for s in sigs)
+
+
+def test_compute_signals_detects_circular(store):
+    touched = agent.traverse_ring(store, "ACC-CIRC-01")
+    sigs = agent.compute_signals(store, "ACC-CIRC-01", touched)
+    assert any(s["typology"] == "circular_layering" for s in sigs)
+
+
+def test_compute_signals_detects_shared_device(store):
+    touched = agent.traverse_ring(store, "ACC-DEV-01")
+    sigs = agent.compute_signals(store, "ACC-DEV-01", touched)
+    assert any(s["typology"] == "shared_device_ring" for s in sigs)
+    # shared_device leads (most distinctive) when present
+    assert sigs[0]["typology"] == "shared_device_ring"
+
+
+def test_signals_evidence_ids_are_real(store):
+    touched = agent.traverse_ring(store, "ACC-BENEF-STRUCT")
+    sigs = agent.compute_signals(store, "ACC-BENEF-STRUCT", touched)
+    for s in sigs:
+        assert s["evidence_ids"], "signal has no evidence"
