@@ -32,3 +32,6 @@ demo_cache/
 
 # pyvis-generated graph assets
 lib/
+
+# reference-only material (Build Bible source, original starter zip) — not the codebase
+Cowork-Brainstorm/

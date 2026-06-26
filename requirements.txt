@@ -8,5 +8,6 @@ Faker>=24.0
 pandas>=2.2
 requests>=2.31
 python-dotenv>=1.0
+pytest>=8.0
 # Llama is served separately via Ollama (https://ollama.com) — not a pip package.
 # Optional production serving: vllm, or NVIDIA NIM. The MODEL stays Llama.
