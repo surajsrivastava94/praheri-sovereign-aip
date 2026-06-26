@@ -34,6 +34,16 @@ Went from a partially-scaffolded starter kit to a complete, working Praheri buil
 - Docs: `docs/demo_script.md`, `docs/DECK_OUTLINE.md`, `docs/plans/2026-06-25-001-feat-praheri-sovereign-aip-build-plan.md`.
 
 ### Carry-over to next session
-- Manual browser click-through of Approvals/Audit, Procurement, OAG-vs-RAG tabs (verified programmatically, not yet eyeballed live).
+- **Run the full demo live** in the browser (next session's focus).
+- Manual click-through of Approvals/Audit, Procurement, OAG-vs-RAG tabs (verified programmatically, not yet eyeballed live).
 - Record the backup demo video.
 - Build the pitch deck from the outline; rehearse the 3-min script + Q&A.
+
+### Addendum (same session) — workspace restructure
+After the build, user confirmed `Cowork-Brainstorm/` was only context. Moved the
+entire build repo (incl. `.git`) up so **`~/Praheri-AIP/` is now the project root**;
+`Cowork-Brainstorm/` (Build Bible source + starter zip) is reference-only and
+gitignored. `.venv` recreated at the new path; `pytest` added to requirements
+(was missing); wiki restored into `docs/` with root-relative paths. Full suite
+re-verified **52 green** from the new root. (+3 commits: `ebeebd3`, `e725fd6`→
+already counted, `0832d98`; now 20 commits total.)

@@ -31,10 +31,11 @@
 
 ## Milestone shipped
 
-- **17 commits** on `main`, tag **`mvp-checkpoint`** at the U7 end-to-end path.
+- **20 commits** on `main`, tag **`mvp-checkpoint`** at the U7 end-to-end path.
 - Working modules: `praheri/{models,generate,store,agent,policy_rag,governance,sovereignty,models_procurement}.py`, `app/streamlit_app.py`.
 - Docs: `docs/demo_script.md`, `docs/DECK_OUTLINE.md`, plan at `docs/plans/2026-06-25-001-feat-praheri-sovereign-aip-build-plan.md`.
 - Tests: `tests/` — 52 passing (live tests need Ollama running).
+- **Project root is now `~/Praheri-AIP/`** (moved up out of `Cowork-Brainstorm/praheri-starter/`). `Cowork-Brainstorm/` is reference-only (Build Bible source + starter zip) and gitignored. `.venv` recreated at the new path; suite re-verified green.
 
 ---
 
@@ -58,7 +59,9 @@
 
 ## What's next (next session focus)
 
-1. **Manual click-through** of the tabs not yet eyeballed live: Approvals→Audit loop, Procurement (over-budget PO), OAG-vs-RAG expander.
-2. **Record the backup demo video** (BUILD_BIBLE §11 insurance) following `docs/demo_script.md` checklist.
-3. **Build the pitch deck** from `docs/DECK_OUTLINE.md`.
-4. **Rehearse** the 3-min script + judge Q&A (BUILD_BIBLE §12).
+**Run the demo.** Walk the full 3-min flow live in the browser following `docs/demo_script.md`:
+1. Pre-demo checklist: warm Ollama, `python -m praheri.generate` (fresh data), prime the golden cache.
+2. End-to-end: Alert Queue → Investigate `ALERT-R001` → ring lights up → STR → propose freeze → MLRO approve → audit entry → sovereignty check → procurement tab.
+3. Eyeball the tabs not yet clicked: Approvals→Audit, Procurement (over-budget PO), OAG-vs-RAG expander.
+
+Then (after the demo runs clean): record the backup video, build the deck from `docs/DECK_OUTLINE.md`, rehearse Q&A (BUILD_BIBLE §12).

@@ -2,7 +2,7 @@
 
 **Project root:** `~/Praheri-AIP/` (the git repo + all code live here). `Cowork-Brainstorm/` is reference-only material (the Build Bible source + original starter zip) and is gitignored.
 
-**Today's goal:** Click through the not-yet-eyeballed tabs (Approvals→Audit, Procurement over-budget PO, OAG-vs-RAG), then record the backup demo video and build the pitch deck from `docs/DECK_OUTLINE.md`.
+**Today's goal:** Run the full 3-minute demo live in the browser, end to end, following `docs/demo_script.md` (pre-demo checklist first: warm Ollama, regenerate data, prime the golden cache). Confirm every beat lands; note anything that needs polish before recording the backup video.
 
 ---
 
