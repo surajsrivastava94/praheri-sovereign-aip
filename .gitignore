@@ -29,3 +29,6 @@ data/
 praheri.db
 audit_log.jsonl
 demo_cache/
+
+# pyvis-generated graph assets
+lib/
