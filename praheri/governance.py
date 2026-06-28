@@ -146,3 +146,20 @@ def approve_purchase_order(actor: Actor, requisition_id: str, amount: float,
     return (f"PO {requisition_id} approved for INR{amount:,.0f}"
             if not over else
             f"PO {requisition_id} (INR{amount:,.0f}) EXCEEDS budget — escalated")
+
+
+# ----------------------------------------------- generic vertical actions (U7)
+# The shallow verticals (insurance/lending/wealth/corporate) propose their
+# governed actions through the SAME @action engine, queue and audit log as AML —
+# one approval gate for every sector. High-stakes actions route to MLRO; the few
+# routine ones execute immediately. AML's own actions above are untouched.
+@action(requires_role="analyst", requires_approval=True)
+def propose_vertical_action(actor: Actor, vertical: str, action_id: str,
+                            target_id: str, reason: str):
+    return f"{action_id} on {target_id} ({vertical}) approved"
+
+
+@action(requires_role="analyst")
+def execute_vertical_action(actor: Actor, vertical: str, action_id: str,
+                            target_id: str, reason: str):
+    return f"{action_id} on {target_id} ({vertical}) executed"

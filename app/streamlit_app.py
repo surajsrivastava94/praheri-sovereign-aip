@@ -160,12 +160,22 @@ def render_vertical(config) -> None:
 
     # govern: propose the vertical's action(s) into the SAME approval queue
     if config.actions:
+        from praheri import governance as _gov
+
         st.markdown("##### Actions")
         acts = st.columns(len(config.actions))
         for col, act in zip(acts, config.actions):
             if col.button(act.label, key=f"vact_{config.key}_{act.id}"):
-                st.warning(f"Proposed {act.label} → see Approvals (MLRO). "
-                           "(Wired in U7.)")
+                actor = st.session_state.get("_actor")
+                fn = (_gov.propose_vertical_action if act.requires_approval
+                      else _gov.execute_vertical_action)
+                r = fn(actor, vertical=config.key, action_id=act.id,
+                       target_id=root_id, reason=inv["recommendation"])
+                if r["status"] == "PENDING_APPROVAL":
+                    st.warning(f"{r['status']} — {act.label} routed to MLRO "
+                               "(same gate as account freeze). See Approvals.")
+                else:
+                    st.success(f"{r['status']}: {r.get('result', '')}")
 
 
 def _render_procurement_actions(vstore, approve_purchase_order) -> None:
