@@ -91,6 +91,18 @@ def get_config(key: str) -> VerticalConfig:
     return REGISTRY[key]
 
 
+def platform_counters() -> dict[str, int]:
+    """Live counters for the Platform dashboard, derived from REGISTRY so they can
+    never drift from what is actually wired. `+1` ontology is AML — the bespoke
+    hero that is NOT a cartridge but is still a sector the one engine serves."""
+    return {
+        "ontologies": len(REGISTRY) + 1,
+        "object_types": sum(len(c.object_types) for c in REGISTRY.values()),
+        "link_types": sum(len(c.link_types) for c in REGISTRY.values()),
+        "actions": sum(len(c.actions) for c in REGISTRY.values()),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Cartridge definitions. Each vertical is just data. The engine never changes. #
 # --------------------------------------------------------------------------- #

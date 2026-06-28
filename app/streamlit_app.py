@@ -205,6 +205,49 @@ def _render_procurement_actions(vstore, approve_purchase_order) -> None:
                 st.success(r)
 
 
+def render_platform() -> None:
+    """The hero 'OS' screen: one engine, many sectors. Counters come from
+    platform_counters() (derived from REGISTRY) so they can't drift from reality."""
+    from praheri.verticals import REGISTRY, platform_counters
+
+    c = platform_counters()
+
+    # center engine box — the pipeline that is identical across every vertical
+    st.markdown("### One sovereign engine. Every sector is a cartridge.")
+    st.markdown(
+        "<div style='background:#1a1a2e;color:white;padding:16px 20px;"
+        "border-radius:12px;text-align:center;font-size:1.05em'>"
+        "🛡️ <b>Triage → Traverse → Detect → Decide → Govern → Audit</b>"
+        "</div>", unsafe_allow_html=True)
+    st.caption("This pipeline is unchanged across all verticals.")
+
+    # live counters — the proof. ontologies = all registered cartridges + AML hero.
+    cols = st.columns(4)
+    cols[0].metric("Ontologies", c["ontologies"], help="incl. AML (bespoke hero)")
+    cols[1].metric("Object types", c["object_types"])
+    cols[2].metric("Link types", c["link_types"])
+    cols[3].metric("Governed actions", c["actions"])
+
+    # the money line — built from the counters, not hardcoded.
+    st.markdown(
+        f"#### 1 engine · {c['ontologies']} ontologies · {c['object_types']} object "
+        f"types · **0 lines of engine code changed per vertical**")
+
+    # one clickable tile per registered cartridge (AML is the bespoke hero, not here)
+    st.markdown("##### Sector cartridges")
+    cols = st.columns(len(REGISTRY))
+    for col, cfg in zip(cols, REGISTRY.values()):
+        with col:
+            st.markdown(f"**{cfg.icon} {cfg.name}**")
+            st.caption(cfg.regulator)
+            # no programmatic tab switch in Streamlit — set a jump target + guide.
+            if st.button("Open →", key=f"platform_jump_{cfg.key}"):
+                st.session_state["platform_jump"] = cfg.key
+    jump = st.session_state.get("platform_jump")
+    if jump:
+        st.info(f"→ open the **{REGISTRY[jump].name}** tab above.")
+
+
 st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
 st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic data; decision-support only.")
@@ -226,12 +269,15 @@ with st.sidebar.expander("🛡️ Verify sovereignty"):
         st.error(f"External egress: {rep['external_endpoints']}")
     st.caption("Local only: " + ", ".join(rep["local_endpoints"]))
 
-tabs = st.tabs(["🚨 Alert Queue", "🔎 Investigation", "✅ Approvals (MLRO)",
-                "📜 Audit Trail", "🧾 Procurement",
+tabs = st.tabs(["🌐 Platform", "🚨 Alert Queue", "🔎 Investigation",
+                "✅ Approvals (MLRO)", "📜 Audit Trail", "🧾 Procurement",
                 "🛡 Insurance SIU", "🏦 Lending EWS",
                 "📈 Wealth", "🏢 Corporate"])
 
 with tabs[0]:
+    render_platform()
+
+with tabs[1]:
     st.subheader("Open alerts (sorted by score)")
     alerts = store.query_objects("Alert")
     alerts.sort(key=lambda a: a["properties"]["score"], reverse=True)
@@ -252,7 +298,7 @@ with tabs[0]:
             st.session_state["selected_account_id"] = p["account_id"]
             st.success(f"Selected {p['alert_id']} — open the Investigation tab.")
 
-with tabs[1]:
+with tabs[2]:
     st.subheader("Investigation")
     alert_id = st.session_state.get("selected_alert_id")
     if not alert_id:
@@ -350,7 +396,7 @@ with tabs[1]:
             except agent.LlamaUnavailable as e:
                 st.error(f"Llama unavailable: {e}")
 
-with tabs[2]:
+with tabs[3]:
     st.subheader("Pending approvals")
     for item in governance.PENDING.list_pending():
         st.json(item)
@@ -359,12 +405,12 @@ with tabs[2]:
     if not governance.PENDING.list_pending():
         st.write("No pending actions. (Propose a freeze/STR from Investigation.)")
 
-with tabs[3]:
+with tabs[4]:
     st.subheader("Immutable audit trail")
     rows = governance.read_audit()
     st.dataframe(rows if rows else [{"info": "no audit entries yet"}], width="stretch")
 
-with tabs[4]:
+with tabs[5]:
     # Procurement is now cartridge #1 — rendered through the SAME shared
     # render_vertical() as every other shallow vertical (the platform thesis,
     # made literal). The over-budget PO still hits the MLRO approval gate.
@@ -372,25 +418,25 @@ with tabs[4]:
 
     render_vertical(_get_config("procurement"))
 
-with tabs[5]:
+with tabs[6]:
     # Insurance SIU — same cockpit, fraud-ring ontology. (U5)
     from praheri.verticals import get_config as _get_config
 
     render_vertical(_get_config("insurance_siu"))
 
-with tabs[6]:
+with tabs[7]:
     # Lending EWS — same cockpit, contagion + EMI-stress signals. (U5)
     from praheri.verticals import get_config as _get_config
 
     render_vertical(_get_config("lending_ews"))
 
-with tabs[7]:
+with tabs[8]:
     # Wealth — same cockpit, suitability mis-selling cluster. (U6)
     from praheri.verticals import get_config as _get_config
 
     render_vertical(_get_config("wealth"))
 
-with tabs[8]:
+with tabs[9]:
     # Corporate — same cockpit, circular ownership + shared-UBO. (U6)
     from praheri.verticals import get_config as _get_config
 

@@ -7,7 +7,7 @@ import json
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from praheri.verticals import get_config
+from praheri.verticals import REGISTRY, get_config, platform_counters
 from praheri.vertical_store import GenericOntologyStore
 
 APP = "app/streamlit_app.py"
@@ -56,3 +56,35 @@ def test_generate_verticals_is_deterministic():
     a_nodes, a_edges = build_procurement()
     b_nodes, b_edges = build_procurement()
     assert a_nodes == b_nodes and a_edges == b_edges
+
+
+# --- U8: Platform dashboard ------------------------------------------------- #
+
+def test_platform_counters_match_registry():
+    # Recompute independently from REGISTRY so the assertion can't pass on magic
+    # numbers — the dashboard's whole credibility is "counts can't drift".
+    c = platform_counters()
+    assert c["ontologies"] == len(REGISTRY) + 1  # +1 = AML (bespoke hero)
+    assert c["object_types"] == sum(len(v.object_types) for v in REGISTRY.values())
+    assert c["link_types"] == sum(len(v.link_types) for v in REGISTRY.values())
+    assert c["actions"] == sum(len(v.actions) for v in REGISTRY.values())
+
+
+def test_platform_tab_is_first_and_renders():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    assert at.tabs[0].label.endswith("Platform") or "Platform" in at.tabs[0].label
+
+
+def test_platform_money_line_present():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    blob = " ".join(m.value for m in at.markdown)
+    assert "0 lines of engine code changed per vertical" in blob
+
+
+def test_cartridge_tile_click_sets_jump_target():
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    # one tile per registered cartridge; clicking sets a predictable jump key
+    btn = next(b for b in at.button if b.key == "platform_jump_procurement")
+    btn.click().run()
+    assert at.session_state["platform_jump"] == "procurement"
