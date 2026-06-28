@@ -1,6 +1,6 @@
 # Praheri — Project Status
 
-**Last updated:** 2026-06-26
+**Last updated:** 2026-06-28
 **Overall:** ✅ **Full functional build complete.** All 7 playbook phases shipped (U0–U16), 52 tests passing, MVP checkpoint tagged. Remaining work is rehearsal + pitch deck design, not code.
 
 ---
@@ -57,11 +57,21 @@
 
 ---
 
-## What's next (next session focus)
+## Active build — Multi-Vertical "Sovereign AIP OS" (branch `feat/multi-vertical-os`)
 
-**Run the demo.** Walk the full 3-min flow live in the browser following `docs/demo_script.md`:
-1. Pre-demo checklist: warm Ollama, `python -m praheri.generate` (fresh data), prime the golden cache.
-2. End-to-end: Alert Queue → Investigate `ALERT-R001` → ring lights up → STR → propose freeze → MLRO approve → audit entry → sovereignty check → procurement tab.
-3. Eyeball the tabs not yet clicked: Approvals→Audit, Procurement (over-budget PO), OAG-vs-RAG expander.
+**Pivot (2026-06-28):** before running the demo, expanding Praheri from a single AML demo into a
+config-driven **multi-vertical platform** (the "OS" thesis). Brainstormed → spec → plan, now executing.
 
-Then (after the demo runs clean): record the backup video, build the deck from `docs/DECK_OUTLINE.md`, rehearse Q&A (BUILD_BIBLE §12).
+- **Spec:** `docs/superpowers/specs/2026-06-28-praheri-multi-vertical-os-design.md` (commit `0dc6995`).
+- **Plan:** `docs/plans/2026-06-28-001-feat-multi-vertical-sovereign-aip-os-plan.md` (commit `c289b83`) — 10 units (U1–U10), phased P0–P5.
+- **Shape:** one themeable `render_vertical()` + `VerticalConfig` cartridges for Lending, Insurance SIU, Wealth, Corporate, Procurement; a Platform dashboard with registry-derived live counters. AML hero stays untouched (KTD-1); engine changes additive (KTD-2); real traversal+signals, cached narrative.
+
+**Progress:**
+- ✅ **P0 (U1+U2)** — `praheri/verticals.py` (VerticalConfig + registry), `praheri/vertical_store.py` (GenericOntologyStore over networkx, same contract as OntologyStore). Commits `44fe420`, `d18874c`. **67 tests green** (52 original + 15 new); AML files zero-diff.
+- ⏭ **Next: P1 (U3+U4)** — `compute_signals_for()` + detector registry (`vertical_engine.py`), then `render_vertical()` shared renderer + migrate the hard-coded Procurement tab to be cartridge #1.
+
+**Test note:** full suite takes ~145s offline (pre-existing Ollama retry-backoff in `test_agent_tools`/`test_investigate`, 22 tests). Fast gate (everything except those two files) = ~4s, 45 tests — use it between units; run the full suite at phase boundaries.
+
+## Deferred (after the multi-vertical build lands)
+
+**Run the demo.** Full 3-min flow per `docs/demo_script.md`: Alert Queue → Investigate `ALERT-R001` → ring → STR → propose freeze → MLRO approve → audit → sovereignty check → procurement. Then record backup video, build deck from `docs/DECK_OUTLINE.md`, rehearse Q&A (BUILD_BIBLE §12).
