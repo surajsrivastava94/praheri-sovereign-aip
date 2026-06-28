@@ -217,7 +217,8 @@ with st.sidebar.expander("🛡️ Verify sovereignty"):
     st.caption("Local only: " + ", ".join(rep["local_endpoints"]))
 
 tabs = st.tabs(["🚨 Alert Queue", "🔎 Investigation", "✅ Approvals (MLRO)",
-                "📜 Audit Trail", "🧾 Procurement (vertical #2)"])
+                "📜 Audit Trail", "🧾 Procurement",
+                "🛡 Insurance SIU", "🏦 Lending EWS"])
 
 with tabs[0]:
     st.subheader("Open alerts (sorted by score)")
@@ -359,3 +360,15 @@ with tabs[4]:
     from praheri.verticals import get_config as _get_config
 
     render_vertical(_get_config("procurement"))
+
+with tabs[5]:
+    # Insurance SIU — same cockpit, fraud-ring ontology. (U5)
+    from praheri.verticals import get_config as _get_config
+
+    render_vertical(_get_config("insurance_siu"))
+
+with tabs[6]:
+    # Lending EWS — same cockpit, contagion + EMI-stress signals. (U5)
+    from praheri.verticals import get_config as _get_config
+
+    render_vertical(_get_config("lending_ews"))

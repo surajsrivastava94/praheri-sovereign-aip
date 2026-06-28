@@ -122,3 +122,83 @@ PROCUREMENT = register(VerticalConfig(
     sample_data_path="data/verticals/procurement.json",
     golden_cache_key="procurement",
 ))
+
+
+INSURANCE_SIU = register(VerticalConfig(
+    key="insurance_siu",
+    name="Insurance — Claims Fraud (SIU)",
+    icon="🛡",
+    accent_color="#FF5630",
+    tagline="Staged-accident rings, same graph engine as AML — different nouns.",
+    regulator="IRDAI · DPDP Act 2023",
+    object_types=[
+        ObjectTypeSpec(name="Claim", icon="📄", color="#FF5630",
+                       key_props=["amount", "type", "status"]),
+        ObjectTypeSpec(name="Garage", icon="🔧", color="#FFAB00",
+                       key_props=["name", "city", "empanelled"]),
+        ObjectTypeSpec(name="Claimant", icon="👤", color="#4C9AFF",
+                       key_props=["name", "phone"]),
+        ObjectTypeSpec(name="Policy", icon="📋", color="#998DD9",
+                       key_props=["sum_insured", "product"]),
+    ],
+    link_types=["serviced_by", "filed_by", "under_policy", "raised_on"],
+    kpi_cards=[
+        KPI(label="Open SIU cases", value="1", delta="₹5.6L exposure"),
+        KPI(label="Claims in ring", value="6"),
+        KPI(label="Suspect garages", value="1"),
+    ],
+    signals=[SignalSpec(
+        id="shared_attribute_ring", label="Shared-garage ring",
+        why="Many ostensibly unrelated claims routed through one non-empanelled garage.",
+        params={"hub_type": "Garage", "min_members": 5,
+                "typology": "shared_garage_ring"})],
+    actions=[ActionSpec(id="refer_to_siu", label="Refer to SIU",
+                        requires_approval=True)],
+    sample_data_path="data/verticals/insurance.json",
+    golden_cache_key="insurance_siu",
+))
+
+
+LENDING_EWS = register(VerticalConfig(
+    key="lending_ews",
+    name="Lending — Early Warning Signals",
+    icon="🏦",
+    accent_color="#00B8D9",
+    tagline="Predict NPA stress before DPD — common-director contagion + EMI bounces.",
+    regulator="RBI EWS (>₹5 Cr) · Digital Lending 2022",
+    object_types=[
+        ObjectTypeSpec(name="Borrower", icon="🏢", color="#00B8D9",
+                       key_props=["name", "rating"]),
+        ObjectTypeSpec(name="Loan", icon="💳", color="#36B37E",
+                       key_props=["exposure", "dpd"]),
+        ObjectTypeSpec(name="Director", icon="👔", color="#FFAB00",
+                       key_props=["name", "din"]),
+        ObjectTypeSpec(name="Inflow", icon="💧", color="#998DD9",
+                       key_props=["amount", "kind"]),
+    ],
+    link_types=["governed_by", "lent_to", "credited_to", "raised_on"],
+    kpi_cards=[
+        KPI(label="Stressed exposures", value="₹5 Cr"),
+        KPI(label="Borrowers in cluster", value="5"),
+        KPI(label="Common directors", value="1", delta="contagion hub"),
+    ],
+    signals=[
+        SignalSpec(id="shared_attribute_ring", label="Common-director cluster",
+                   why="Multiple borrowers governed by one director — correlated stress.",
+                   params={"hub_type": "Director", "min_members": 5,
+                           "typology": "common_director_cluster"}),
+        SignalSpec(id="threshold_cluster", label="EMI-bounce stress",
+                   why="A borrower receiving many sub-threshold partial EMIs — distress.",
+                   params={"member_type": "Borrower", "link_type": "credited_to_in",
+                           "amount_prop": "amount", "threshold": 10_000,
+                           "min_count": 5, "typology": "emi_bounce_stress"}),
+    ],
+    actions=[
+        ActionSpec(id="margin_call", label="Issue margin call",
+                   requires_approval=True),
+        ActionSpec(id="downgrade_rating", label="Downgrade rating",
+                   requires_approval=True),
+    ],
+    sample_data_path="data/verticals/lending.json",
+    golden_cache_key="lending_ews",
+))
