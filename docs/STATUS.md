@@ -67,8 +67,11 @@ config-driven **multi-vertical platform** (the "OS" thesis). Brainstormed → sp
 - **Shape:** one themeable `render_vertical()` + `VerticalConfig` cartridges for Lending, Insurance SIU, Wealth, Corporate, Procurement; a Platform dashboard with registry-derived live counters. AML hero stays untouched (KTD-1); engine changes additive (KTD-2); real traversal+signals, cached narrative.
 
 **Progress:**
-- ✅ **P0 (U1+U2)** — `praheri/verticals.py` (VerticalConfig + registry), `praheri/vertical_store.py` (GenericOntologyStore over networkx, same contract as OntologyStore). Commits `44fe420`, `d18874c`. **67 tests green** (52 original + 15 new); AML files zero-diff.
-- ⏭ **Next: P1 (U3+U4)** — `compute_signals_for()` + detector registry (`vertical_engine.py`), then `render_vertical()` shared renderer + migrate the hard-coded Procurement tab to be cartridge #1.
+- ✅ **P0 (U1+U2)** — `praheri/verticals.py` (VerticalConfig + registry), `praheri/vertical_store.py` (GenericOntologyStore over networkx, same contract as OntologyStore). Commits `44fe420`, `d18874c`.
+- ✅ **P1 (U3+U4)** — `praheri/vertical_engine.py` (3 config-driven detectors + `compute_signals_for` + `compute_vertical_investigation`, reuses AML `_has_cycle` by import), `render_vertical()` + `render_vertical_graph()` shared renderer, **Procurement migrated to cartridge #1** (`tabs[4]` now renders via the generic cockpit; over-budget PO still hits MLRO gate). Commits `61e9e4e`, `cc082f4`. **84 tests green** (52 original + 32 new); AML `agent.py`/`store.py` zero-diff; existing procurement + app-render tests intact.
+- ⏭ **Next: P2 (U5)** — synthetic data + cartridges for **Insurance SIU** (shared-garage ring) and **Lending EWS** (shared-director + EMI threshold), each with a planted ring + canned alert; both investigate end-to-end via `render_vertical`.
+
+**Reminder:** vertical data is gitignored (`data/verticals/`); regenerate with `python -m praheri.generate_verticals` (like AML's `python -m praheri.generate`).
 
 **Test note:** full suite takes ~145s offline (pre-existing Ollama retry-backoff in `test_agent_tools`/`test_investigate`, 22 tests). Fast gate (everything except those two files) = ~4s, 45 tests — use it between units; run the full suite at phase boundaries.
 
