@@ -1,5 +1,47 @@
 # Praheri — Session Log
 
+## [2026-06-28] Session 2 — Pivot to multi-vertical "Sovereign AIP OS" (P0–P3 shipped)
+
+### Outcome
+Reframed Praheri from a single AML demo into a **config-driven multi-vertical platform** and built 7 of 10 planned units. The full engine kernel + **all 5 shallow verticals** (Procurement, Insurance SIU, Lending EWS, Wealth, Corporate) now investigate end-to-end and route governed actions through one shared engine — with the AML hero kept byte-for-byte untouched. 47 new tests; 106 deterministic-green.
+
+### What happened (in order)
+1. Researched the BFSI service landscape (3 parallel agents) → mapped where the typed-ontology + OAG + governed-actions + audit pattern fits across payments/lending/insurance/wealth/corporate; grounded the India data-localization (RBI 2018, DPDP) sovereignty argument and the Palantir/Quantexa white space.
+2. Brainstormed (superpowers) → committed the vision **spec** (`0dc6995`): one themeable `render_vertical()` + `VerticalConfig` cartridges + a Platform dashboard. Locked: Option Y lineup (Procurement as the non-financial 6th cartridge), real-traversal/cached-narrative, one beautiful config-driven template (not 5 bespoke pages).
+3. `ce-plan` → committed the 10-unit **plan** (`c289b83`), P0–P5. Reading the code first surfaced the load-bearing decision (KTD-1): `OntologyStore` is AML-schema-hardcoded, so verticals need a separate `GenericOntologyStore`, not a retrofit.
+4. `ce-work` on branch `feat/multi-vertical-os`:
+   - **P0** (U1+U2): `verticals.py` (VerticalConfig + registry), `vertical_store.py` (GenericOntologyStore over networkx, same structured-object contract as OntologyStore).
+   - **P1** (U3+U4): `vertical_engine.py` (3 config-driven detectors reusing AML `_has_cycle` by import; `compute_signals_for`; cached investigation), `render_vertical()` + `render_vertical_graph()`, **Procurement migrated to cartridge #1**.
+   - **P2** (U5): Insurance SIU (shared-garage ring) + Lending EWS (common-director + EMI-bounce) cartridges + data + nav.
+   - **P3** (U6+U7): Wealth (mis-selling) + Corporate (circular ownership + shared-UBO) cartridges + nav (9 tabs); vertical actions wired through governance additively (+17/-0).
+5. P3 full suite surfaced 1 failure → systematic-debugging proved it a **pre-existing flaky AML live test** (8B writes id-ranges; `agent.py` zero-diff), not a regression. User chose to note-and-not-touch (keep hero zero-diff).
+
+### Key decisions
+- **KTD-1** — new `GenericOntologyStore` beside `OntologyStore` (don't retrofit the AML store); both speak the identical `{type,id,properties,linked_ids}` contract so traversal/signals/renderer are store-agnostic.
+- **KTD-2** — config-driven detectors reuse AML's `_has_cycle` by *import* (not copy/move), so `agent.py` stays byte-for-byte untouched.
+- **Procurement = cartridge #1** (Option Y): migrated the hard-coded tab into the registry so Platform counters can't lie.
+- **Flaky AML live test**: note as known issue; fix later in an AML-scoped change — do not touch the hero mid-build.
+
+### Issues encountered + resolved
+- Directed-vs-undirected edges in the cycle/threshold detectors (false cycles / missed inbound counts) → fixed to read `linked_ids` direction; locked by tests. ✅
+- Stale `test_app_renders` tab-count assertion (5) as verticals were added → updated to 9 (legitimate, deliberate). ✅
+- 1 flaky AML live STR test → root-caused as pre-existing 8B nondeterminism, not a P3 regression → noted in STATUS. → carry-over (AML-scoped fix later)
+
+### Artifacts produced
+- 12 commits on `feat/multi-vertical-os` (not yet pushed — **no git remote**).
+- Spec: `docs/superpowers/specs/2026-06-28-praheri-multi-vertical-os-design.md`.
+- Plan: `docs/plans/2026-06-28-001-feat-multi-vertical-sovereign-aip-os-plan.md`.
+- Code: `praheri/{verticals,vertical_store,vertical_engine,generate_verticals}.py`, additive edits to `app/streamlit_app.py` + `praheri/governance.py`.
+- Tests: `tests/test_{verticals_config,vertical_store,vertical_engine,app_verticals,generate_verticals,vertical_governance}.py` (47 new); data under `data/verticals/` (gitignored, regenerate via `python -m praheri.generate_verticals`).
+
+### Carry-over to next session
+- **P4** — U8 Platform dashboard (registry-derived live counters) + U9 `ui-ux-pro-max` polish pass.
+- **P5** — U10 prime golden caches, update `docs/demo_script.md` with the cartridge-swap beat, rehearse.
+- Eyeball the 5 verticals live in the browser (verified programmatically, not yet clicked through).
+- Fix the flaky AML live test (range-aware assertion) — AML-scoped, separate from the vertical build.
+- **No git remote** — 12 commits are local-only; set up a remote if off-machine backup/push is wanted.
+- Eventually merge `feat/multi-vertical-os` → `main` once P4/P5 land.
+
 ## [2026-06-25] Session 1 — Plan + full build to all-phases-complete
 
 ### Outcome

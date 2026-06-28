@@ -2,7 +2,7 @@
 
 **Project root:** `~/Praheri-AIP/` (the git repo + all code live here). `Cowork-Brainstorm/` is reference-only material (the Build Bible source + original starter zip) and is gitignored.
 
-**Today's goal:** Run the full 3-minute demo live in the browser, end to end, following `docs/demo_script.md` (pre-demo checklist first: warm Ollama, regenerate data, prime the golden cache). Confirm every beat lands; note anything that needs polish before recording the backup video.
+**Today's goal:** Continue the multi-vertical OS build on branch `feat/multi-vertical-os` — **P4**: build the Platform dashboard (U8 — engine box + 6 cartridge tiles + live counters derived from the `verticals.REGISTRY`, the hero "OS" screen) and run the `ui-ux-pro-max` polish pass on the shared `render_vertical` template (U9). Then P5 (U10): prime golden caches, update `docs/demo_script.md` with the cartridge-swap beat, rehearse. Plan: `docs/plans/2026-06-28-001-feat-multi-vertical-sovereign-aip-os-plan.md`. Keep the AML hero zero-diff; 5 verticals (P0–P3) already shipped, 106 deterministic tests green.
 
 ---
 

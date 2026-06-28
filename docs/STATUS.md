@@ -1,7 +1,7 @@
 # Praheri — Project Status
 
 **Last updated:** 2026-06-28
-**Overall:** ✅ **Full functional build complete.** All 7 playbook phases shipped (U0–U16), 52 tests passing, MVP checkpoint tagged. Remaining work is rehearsal + pitch deck design, not code.
+**Overall:** 🚧 **Multi-vertical "Sovereign AIP OS" build in progress** on branch `feat/multi-vertical-os` (7/10 units, P0–P3 done; 12 commits, local-only). The original AML demo (U0–U16, 52 tests, `mvp-checkpoint` tag) is complete and untouched (`agent.py`/`store.py` zero-diff); all 5 shallow verticals now run on the shared engine. 106 deterministic tests green (+1 pre-existing flaky AML live test, noted). Next: P4 (Platform dashboard + polish) then P5 (caches + rehearse).
 
 ---
 
