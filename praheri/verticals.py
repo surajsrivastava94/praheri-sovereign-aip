@@ -28,10 +28,12 @@ class ObjectTypeSpec(BaseModel):
 
 
 class SignalSpec(BaseModel):
-    """A typology check to run. `id` dispatches to a detector in vertical_engine."""
+    """A typology check to run. `id` dispatches to a detector in vertical_engine;
+    `params` tunes that detector (hub/member types, thresholds) for this vertical."""
     id: str                        # e.g. "shared_attribute_ring" (detector id)
     label: str                     # e.g. "Shared-garage ring"
     why: str                       # plain-English explanation shown in the UI
+    params: dict = {}              # detector-specific knobs (e.g. {"hub_type":"Garage"})
 
 
 class ActionSpec(BaseModel):
