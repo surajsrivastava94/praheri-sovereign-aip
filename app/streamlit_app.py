@@ -85,6 +85,60 @@ def render_vertical_graph(g, highlight: set[str], accent: str = "#36B37E") -> No
     components.html(html, height=540)
 
 
+# --------------------------------------------------------------------------- #
+# Shared visual system (U9). Pure inline-styled HTML blocks rendered via        #
+# st.markdown — scoped to the HTML we emit, so NO global CSS bleed into the AML #
+# hero tabs. Theming is driven entirely by each config's accent_color; nothing  #
+# here branches per vertical. Dark-mode (OLED) tokens align with the canvas.    #
+# --------------------------------------------------------------------------- #
+_SURFACE = "#0F172A"        # card surface
+_BORDER = "#334155"         # neutral border
+_FG = "#F8FAFC"             # foreground text
+_MUTED = "#94A3B8"          # muted label text
+_PLATFORM_ACCENT = "#4C9AFF"  # brand accent for the multi-vertical Platform view
+_STATUS_COLOR = {"FILE": "#FF5630", "ESCALATE": "#FFAB00", "CLEAR": "#36B37E"}
+
+
+def _kpi_card_html(label: str, value: str, delta: str | None, accent: str) -> str:
+    """One accent-bordered bento KPI card as a self-contained HTML string."""
+    delta_html = (
+        f"<div style='color:{accent};font-size:0.78rem;font-weight:500;"
+        f"margin-top:6px'>{delta}</div>" if delta else "")
+    return (
+        f"<div style='background:{_SURFACE};border:1px solid {_BORDER};"
+        f"border-top:3px solid {accent};border-radius:12px;padding:16px 18px;"
+        f"min-height:104px;word-break:break-word'>"
+        f"<div style='color:{_MUTED};font-size:0.78rem;font-weight:500;"
+        f"letter-spacing:0.02em'>{label}</div>"
+        f"<div style='color:{_FG};font-size:1.5rem;font-weight:700;"
+        f"margin-top:4px;line-height:1.2'>{value}</div>"
+        f"{delta_html}</div>")
+
+
+def _section(label: str, accent: str) -> None:
+    """Accent-themed section subheader (replaces plain `##### …`)."""
+    st.markdown(
+        f"<div style='font-size:0.95rem;font-weight:600;color:{_FG};"
+        f"margin:20px 0 8px;padding-left:10px;border-left:3px solid {accent}'>"
+        f"{label}</div>", unsafe_allow_html=True)
+
+
+def _hero_band(config, accent: str) -> None:
+    """Cohesive accent-themed sector header: icon+name, tagline, regulator chip."""
+    st.markdown(
+        f"<div style='background:linear-gradient(135deg,{accent}22,{_SURFACE});"
+        f"border:1px solid {accent}55;border-radius:14px;padding:18px 22px;"
+        f"margin-bottom:10px'>"
+        f"<div style='font-size:1.5rem;font-weight:700;color:{_FG}'>"
+        f"{config.icon} {config.name}</div>"
+        f"<div style='color:{_MUTED};font-size:0.95rem;margin:4px 0 12px'>"
+        f"{config.tagline}</div>"
+        f"<span style='background:{accent};color:#fff;padding:3px 12px;"
+        f"border-radius:10px;font-size:0.78rem;font-weight:500'>"
+        f"{config.regulator}</span>"
+        f"</div>", unsafe_allow_html=True)
+
+
 def render_vertical(config) -> None:
     """Shared renderer for the config-driven shallow verticals. Same six bands for
     every cartridge — the visual sameness IS the platform proof. Real traversal +
@@ -96,18 +150,15 @@ def render_vertical(config) -> None:
     from praheri.vertical_store import GenericOntologyStore
 
     accent = config.accent_color
-    # 1) sector hero band
-    st.markdown(f"### {config.icon} {config.name}")
-    st.caption(config.tagline)
-    st.markdown(f"<span style='background:{accent};color:white;padding:2px 10px;"
-                f"border-radius:10px;font-size:0.8em'>{config.regulator}</span>",
-                unsafe_allow_html=True)
+    # 1) sector hero band — cohesive accent-themed header (icon+name+tagline+chip)
+    _hero_band(config, accent)
 
-    # 2) KPI row
+    # 2) KPI row — accent-bordered bento cards (own HTML; no global st.metric restyle)
     if config.kpi_cards:
         cols = st.columns(len(config.kpi_cards))
         for col, kpi in zip(cols, config.kpi_cards):
-            col.metric(kpi.label, kpi.value, kpi.delta)
+            col.markdown(_kpi_card_html(kpi.label, kpi.value, kpi.delta, accent),
+                         unsafe_allow_html=True)
 
     # load the cartridge's synthetic data (skip gracefully if not generated yet)
     try:
@@ -124,7 +175,7 @@ def render_vertical(config) -> None:
         return
 
     # 3') Investigation-centric verticals: alert queue -> investigate -> signals.
-    st.markdown("##### 🚨 Alerts")
+    _section("🚨 Alerts", accent)
     alerts = vstore.query_objects("Alert")
     if not alerts:
         st.info("No alerts seeded for this vertical yet.")
@@ -140,21 +191,23 @@ def render_vertical(config) -> None:
         return
     inv = vertical_engine.compute_vertical_investigation(config, vstore, root_id)
     badge = {"FILE": "🔴", "ESCALATE": "🟠", "CLEAR": "🟢"}.get(inv["recommendation"], "⚪")
+    rec_color = _STATUS_COLOR.get(inv["recommendation"], accent)
     src = "🟢 Live" if inv["source"] == "live" else "💾 Cached"
     c1, c2 = st.columns(2)
-    c1.metric("Recommendation", f"{badge} {inv['recommendation']}")
-    c2.metric("Source", src)
+    c1.markdown(_kpi_card_html("Recommendation", f"{badge} {inv['recommendation']}",
+                               None, rec_color), unsafe_allow_html=True)
+    c2.markdown(_kpi_card_html("Source", src, None, accent), unsafe_allow_html=True)
 
-    st.markdown("##### Ring graph (OAG traversal)")
+    _section("Ring graph (OAG traversal)", accent)
     render_vertical_graph(vstore.build_graph(inv["objects_touched"]),
                           highlight=set(inv["cited_ids"]), accent=accent)
 
     if inv["signals"]:
-        st.markdown("##### 🚦 Detected typology signals (engine)")
+        _section("🚦 Detected typology signals (engine)", accent)
         for s in inv["signals"]:
             st.markdown(f"- **{s['typology']}** — {s['detail']}")
     if inv["narrative"]:
-        st.markdown("##### Draft narrative")
+        _section("Draft narrative", accent)
         st.write(inv["narrative"])
     st.caption("Cited: " + ", ".join(f"`{i}`" for i in inv["cited_ids"]))
 
@@ -162,7 +215,7 @@ def render_vertical(config) -> None:
     if config.actions:
         from praheri import governance as _gov
 
-        st.markdown("##### Actions")
+        _section("Actions", accent)
         acts = st.columns(len(config.actions))
         for col, act in zip(acts, config.actions):
             if col.button(act.label, key=f"vact_{config.key}_{act.id}"):
@@ -180,9 +233,12 @@ def render_vertical(config) -> None:
 
 def _render_procurement_actions(vstore, approve_purchase_order) -> None:
     """Procurement's per-requisition budget gate, rendered from the generic store."""
+    from praheri.verticals import get_config as _get_config
+
+    accent = _get_config("procurement").accent_color
     budget = vstore.query_objects("Budget")[0]["properties"]
     remaining = budget["remaining"]
-    st.markdown("##### Requisitions")
+    _section("Requisitions", accent)
     for req in vstore.query_objects("Requisition"):
         p = req["properties"]
         vendor_ids = req["linked_ids"].get("from_vendor", [])
@@ -211,35 +267,53 @@ def render_platform() -> None:
     from praheri.verticals import REGISTRY, platform_counters
 
     c = platform_counters()
+    accent = _PLATFORM_ACCENT
 
     # center engine box — the pipeline that is identical across every vertical
     st.markdown("### One sovereign engine. Every sector is a cartridge.")
     st.markdown(
-        "<div style='background:#1a1a2e;color:white;padding:16px 20px;"
-        "border-radius:12px;text-align:center;font-size:1.05em'>"
-        "🛡️ <b>Triage → Traverse → Detect → Decide → Govern → Audit</b>"
-        "</div>", unsafe_allow_html=True)
-    st.caption("This pipeline is unchanged across all verticals.")
+        f"<div style='background:linear-gradient(135deg,{accent}26,{_SURFACE});"
+        f"border:1px solid {accent}66;border-radius:14px;padding:22px 24px;"
+        f"text-align:center'>"
+        f"<div style='font-size:1.2rem;font-weight:700;color:{_FG}'>"
+        f"🛡️ Triage → Traverse → Detect → Decide → Govern → Audit</div>"
+        f"<div style='color:{_MUTED};font-size:0.85rem;margin-top:8px'>"
+        f"This pipeline is unchanged across all verticals.</div>"
+        f"</div>", unsafe_allow_html=True)
 
     # live counters — the proof. ontologies = all registered cartridges + AML hero.
+    st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+    counters = [("Ontologies", c["ontologies"], "incl. AML hero"),
+                ("Object types", c["object_types"], None),
+                ("Link types", c["link_types"], None),
+                ("Governed actions", c["actions"], None)]
     cols = st.columns(4)
-    cols[0].metric("Ontologies", c["ontologies"], help="incl. AML (bespoke hero)")
-    cols[1].metric("Object types", c["object_types"])
-    cols[2].metric("Link types", c["link_types"])
-    cols[3].metric("Governed actions", c["actions"])
+    for col, (label, value, sub) in zip(cols, counters):
+        col.markdown(_kpi_card_html(label, str(value), sub, accent),
+                     unsafe_allow_html=True)
 
     # the money line — built from the counters, not hardcoded.
     st.markdown(
-        f"#### 1 engine · {c['ontologies']} ontologies · {c['object_types']} object "
-        f"types · **0 lines of engine code changed per vertical**")
+        f"<div style='margin:18px 0 6px;font-size:1.05rem;color:{_FG}'>"
+        f"1 engine · {c['ontologies']} ontologies · {c['object_types']} object "
+        f"types · <b style='color:{accent}'>0 lines of engine code changed per "
+        f"vertical</b></div>", unsafe_allow_html=True)
 
-    # one clickable tile per registered cartridge (AML is the bespoke hero, not here)
-    st.markdown("##### Sector cartridges")
+    # one clickable bento tile per registered cartridge (AML hero is bespoke, not here)
+    _section("Sector cartridges", accent)
     cols = st.columns(len(REGISTRY))
     for col, cfg in zip(cols, REGISTRY.values()):
         with col:
-            st.markdown(f"**{cfg.icon} {cfg.name}**")
-            st.caption(cfg.regulator)
+            taccent = cfg.accent_color
+            st.markdown(
+                f"<div style='background:{_SURFACE};border:1px solid {_BORDER};"
+                f"border-top:3px solid {taccent};border-radius:12px;"
+                f"padding:14px 16px;min-height:96px'>"
+                f"<div style='font-size:1.4rem'>{cfg.icon}</div>"
+                f"<div style='color:{_FG};font-weight:600;font-size:0.9rem;"
+                f"margin-top:4px'>{cfg.name}</div>"
+                f"<div style='color:{_MUTED};font-size:0.74rem;margin-top:4px'>"
+                f"{cfg.regulator}</div></div>", unsafe_allow_html=True)
             # no programmatic tab switch in Streamlit — set a jump target + guide.
             if st.button("Open →", key=f"platform_jump_{cfg.key}"):
                 st.session_state["platform_jump"] = cfg.key
