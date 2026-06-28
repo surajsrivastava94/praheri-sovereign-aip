@@ -68,8 +68,9 @@ config-driven **multi-vertical platform** (the "OS" thesis). Brainstormed → sp
 
 **Progress:**
 - ✅ **P0 (U1+U2)** — `praheri/verticals.py` (VerticalConfig + registry), `praheri/vertical_store.py` (GenericOntologyStore over networkx, same contract as OntologyStore). Commits `44fe420`, `d18874c`.
-- ✅ **P1 (U3+U4)** — `praheri/vertical_engine.py` (3 config-driven detectors + `compute_signals_for` + `compute_vertical_investigation`, reuses AML `_has_cycle` by import), `render_vertical()` + `render_vertical_graph()` shared renderer, **Procurement migrated to cartridge #1** (`tabs[4]` now renders via the generic cockpit; over-budget PO still hits MLRO gate). Commits `61e9e4e`, `cc082f4`. **84 tests green** (52 original + 32 new); AML `agent.py`/`store.py` zero-diff; existing procurement + app-render tests intact.
-- ⏭ **Next: P2 (U5)** — synthetic data + cartridges for **Insurance SIU** (shared-garage ring) and **Lending EWS** (shared-director + EMI threshold), each with a planted ring + canned alert; both investigate end-to-end via `render_vertical`.
+- ✅ **P1 (U3+U4)** — `praheri/vertical_engine.py` (3 config-driven detectors + `compute_signals_for` + `compute_vertical_investigation`, reuses AML `_has_cycle` by import), `render_vertical()` + `render_vertical_graph()` shared renderer, **Procurement migrated to cartridge #1**. Commits `61e9e4e`, `cc082f4`.
+- ✅ **P2 (U5)** — **Insurance SIU** (6-claim shared-garage ring + clean control) and **Lending EWS** (5-borrower common-director cluster + EMI-bounce stress) cartridges + deterministic data + nav tabs; both investigate end-to-end (signals fire → FILE). Commit `40ff546`. **94 tests green** (52 original + 42 new); AML `agent.py`/`store.py` zero-diff. Three sectors now render through one identical cockpit.
+- ⏭ **Next: P3** — **U6**: Wealth (suitability mis-sell) + Corporate (UBO ownership cycle) cartridges + nav. **U7**: wire vertical actions (`refer_to_siu`, `margin_call`, etc.) through governance `@action` additively → shared MLRO queue + audit. Then **P4** (Platform dashboard + polish), **P5** (golden caches + demo script + rehearse).
 
 **Reminder:** vertical data is gitignored (`data/verticals/`); regenerate with `python -m praheri.generate_verticals` (like AML's `python -m praheri.generate`).
 
