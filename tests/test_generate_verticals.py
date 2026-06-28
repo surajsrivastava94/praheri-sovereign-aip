@@ -5,14 +5,17 @@ import json
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from praheri.generate_verticals import build_insurance, build_lending
+from praheri.generate_verticals import (
+    build_corporate, build_insurance, build_lending, build_wealth,
+)
 from praheri.vertical_engine import compute_vertical_investigation
 from praheri.vertical_store import GenericOntologyStore
 from praheri.verticals import get_config
 
 
 # --- determinism (R6) ------------------------------------------------------
-@pytest.mark.parametrize("builder", [build_insurance, build_lending])
+@pytest.mark.parametrize("builder", [build_insurance, build_lending,
+                                     build_wealth, build_corporate])
 def test_builder_is_deterministic(builder):
     a_nodes, a_edges = builder()
     b_nodes, b_edges = builder()
@@ -49,9 +52,28 @@ def test_lending_fires_both_signals():
     assert typ == {"common_director_cluster", "emi_bounce_stress"}
 
 
+def test_wealth_fires_suitability_signal():
+    cfg = get_config("wealth")
+    store = GenericOntologyStore(json.loads(open(cfg.sample_data_path).read()))
+    inv = compute_vertical_investigation(cfg, store, "ADV-RING-01", use_cache=False)
+    assert inv["recommendation"] == "FILE"
+    assert [s["typology"] for s in inv["signals"]] == ["suitability_mismatch"]
+
+
+def test_corporate_fires_ownership_and_ubo_signals():
+    cfg = get_config("corporate")
+    store = GenericOntologyStore(json.loads(open(cfg.sample_data_path).read()))
+    inv = compute_vertical_investigation(cfg, store, "CO-A", use_cache=False)
+    assert inv["recommendation"] == "FILE"
+    typ = {s["typology"] for s in inv["signals"]}
+    assert typ == {"circular_ownership", "shared_ubo_cluster"}
+
+
 # --- each vertical has a canned alert pointing at the ring root ------------
 @pytest.mark.parametrize("key,root", [("insurance_siu", "GAR-RING-01"),
-                                      ("lending_ews", "DIR-RING-01")])
+                                      ("lending_ews", "DIR-RING-01"),
+                                      ("wealth", "ADV-RING-01"),
+                                      ("corporate", "CO-A")])
 def test_vertical_has_alert_on_ring_root(key, root):
     cfg = get_config(key)
     store = GenericOntologyStore(json.loads(open(cfg.sample_data_path).read()))
@@ -62,7 +84,8 @@ def test_vertical_has_alert_on_ring_root(key, root):
 
 
 # --- both datasets load into the generic store cleanly ---------------------
-@pytest.mark.parametrize("key", ["insurance_siu", "lending_ews"])
+@pytest.mark.parametrize("key", ["insurance_siu", "lending_ews",
+                                 "wealth", "corporate"])
 def test_dataset_loads_structured_objects(key):
     cfg = get_config(key)
     store = GenericOntologyStore(json.loads(open(cfg.sample_data_path).read()))

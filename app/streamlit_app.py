@@ -218,7 +218,8 @@ with st.sidebar.expander("🛡️ Verify sovereignty"):
 
 tabs = st.tabs(["🚨 Alert Queue", "🔎 Investigation", "✅ Approvals (MLRO)",
                 "📜 Audit Trail", "🧾 Procurement",
-                "🛡 Insurance SIU", "🏦 Lending EWS"])
+                "🛡 Insurance SIU", "🏦 Lending EWS",
+                "📈 Wealth", "🏢 Corporate"])
 
 with tabs[0]:
     st.subheader("Open alerts (sorted by score)")
@@ -372,3 +373,15 @@ with tabs[6]:
     from praheri.verticals import get_config as _get_config
 
     render_vertical(_get_config("lending_ews"))
+
+with tabs[7]:
+    # Wealth — same cockpit, suitability mis-selling cluster. (U6)
+    from praheri.verticals import get_config as _get_config
+
+    render_vertical(_get_config("wealth"))
+
+with tabs[8]:
+    # Corporate — same cockpit, circular ownership + shared-UBO. (U6)
+    from praheri.verticals import get_config as _get_config
+
+    render_vertical(_get_config("corporate"))

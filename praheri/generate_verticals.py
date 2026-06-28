@@ -133,10 +133,80 @@ def build_lending() -> tuple[list[dict], list[dict]]:
     return nodes, edges
 
 
+# --------------------------------------------------------------- wealth
+def build_wealth() -> tuple[list[dict], list[dict]]:
+    """Planted MIS-SELLING cluster: one adviser sold a high-risk product to 5
+    low-risk-profile clients (SEBI suitability breach). The adviser is the hub —
+    shared_attribute_ring over the mis-sold sales."""
+    nodes: list[dict] = []
+    edges: list[dict] = []
+
+    adviser = "ADV-RING-01"
+    nodes.append({"type": "Adviser", "id": adviser,
+                  "properties": {"name": "R. Kapoor", "arn": "ARN-99887"}})
+    nodes.append({"type": "Alert", "id": "ALERT-WEALTH-01",
+                  "properties": {"score": 79, "rule": "suitability_mismatch",
+                                 "root_id": adviser}})
+    edges.append({"from": "ALERT-WEALTH-01", "to": adviser, "link_type": "raised_on"})
+
+    # high-risk product sold to 5 low-risk clients (>=5 fires shared_attribute_ring)
+    nodes.append({"type": "Product", "id": "PRD-AIF-01",
+                  "properties": {"name": "High-Yield AIF", "risk": "high"}})
+    for i in range(5):
+        sale, client, prof = f"SALE-{i:02d}", f"CLI-{i:02d}", f"PROF-{i:02d}"
+        nodes.append({"type": "Sale", "id": sale,
+                      "properties": {"amount": 20_00_000, "product": "PRD-AIF-01"}})
+        nodes.append({"type": "Client", "id": client,
+                      "properties": {"name": f"Investor {i}"}})
+        nodes.append({"type": "SuitabilityProfile", "id": prof,
+                      "properties": {"risk_appetite": "low", "horizon": "short"}})
+        edges.append({"from": sale, "to": adviser, "link_type": "sold_by"})
+        edges.append({"from": sale, "to": client, "link_type": "sold_to"})
+        edges.append({"from": sale, "to": "PRD-AIF-01", "link_type": "of_product"})
+        edges.append({"from": client, "to": prof, "link_type": "has_profile"})
+    return nodes, edges
+
+
+# --------------------------------------------------------------- corporate
+def build_corporate() -> tuple[list[dict], list[dict]]:
+    """Planted CIRCULAR OWNERSHIP: A->B->C->A holding loop obscuring the true UBO,
+    plus a common UBO across the loop. circular_flow + shared_attribute_ring."""
+    nodes: list[dict] = []
+    edges: list[dict] = []
+
+    ubo = "UBO-01"
+    nodes.append({"type": "UBO", "id": ubo,
+                  "properties": {"name": "V. Singh", "nationality": "IN"}})
+    nodes.append({"type": "Alert", "id": "ALERT-CORP-01",
+                  "properties": {"score": 85, "rule": "circular_ownership",
+                                 "root_id": "CO-A"}})
+    edges.append({"from": "ALERT-CORP-01", "to": "CO-A", "link_type": "raised_on"})
+
+    # circular ownership loop A->B->C->A
+    loop = ["CO-A", "CO-B", "CO-C"]
+    for i, co in enumerate(loop):
+        nodes.append({"type": "Company", "id": co,
+                      "properties": {"name": f"Holdco {co[-1]}", "jurisdiction": "IN"}})
+        nxt = loop[(i + 1) % len(loop)]
+        edges.append({"from": co, "to": nxt, "link_type": "owns"})
+        # each loop company also declares the same UBO (shared_attribute_ring on UBO)
+        edges.append({"from": co, "to": ubo, "link_type": "declares_ubo"})
+
+    # two more shells declaring the same UBO -> >=5 members fires the ring
+    for j in range(2):
+        sh = f"CO-SHELL-{j:02d}"
+        nodes.append({"type": "Company", "id": sh,
+                      "properties": {"name": f"Shell {j}", "jurisdiction": "AE"}})
+        edges.append({"from": sh, "to": ubo, "link_type": "declares_ubo"})
+    return nodes, edges
+
+
 _BUILDERS = {
     "procurement": build_procurement,
     "insurance": build_insurance,
     "lending": build_lending,
+    "wealth": build_wealth,
+    "corporate": build_corporate,
 }
 
 

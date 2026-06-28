@@ -202,3 +202,76 @@ LENDING_EWS = register(VerticalConfig(
     sample_data_path="data/verticals/lending.json",
     golden_cache_key="lending_ews",
 ))
+
+
+WEALTH = register(VerticalConfig(
+    key="wealth",
+    name="Wealth — Suitability & Mis-selling",
+    icon="📈",
+    accent_color="#36B37E",
+    tagline="SEBI suitability breaches — the audit log IS the compliance artifact.",
+    regulator="SEBI IA Regs 2013 · SCORES",
+    object_types=[
+        ObjectTypeSpec(name="Adviser", icon="🧑‍💼", color="#36B37E",
+                       key_props=["name", "arn"]),
+        ObjectTypeSpec(name="Sale", icon="🧾", color="#FF5630",
+                       key_props=["amount", "product"]),
+        ObjectTypeSpec(name="Client", icon="👤", color="#4C9AFF",
+                       key_props=["name"]),
+        ObjectTypeSpec(name="SuitabilityProfile", icon="📊", color="#998DD9",
+                       key_props=["risk_appetite", "horizon"]),
+        ObjectTypeSpec(name="Product", icon="📦", color="#FFAB00",
+                       key_props=["name", "risk"]),
+    ],
+    link_types=["sold_by", "sold_to", "of_product", "has_profile", "raised_on"],
+    kpi_cards=[
+        KPI(label="Mis-sold value", value="₹1 Cr", delta="5 clients"),
+        KPI(label="Suitability breaches", value="5"),
+        KPI(label="Advisers flagged", value="1"),
+    ],
+    signals=[SignalSpec(
+        id="shared_attribute_ring", label="Adviser mis-selling cluster",
+        why="One adviser sold a high-risk product to many low-risk-profile clients.",
+        params={"hub_type": "Adviser", "min_members": 5,
+                "typology": "suitability_mismatch"})],
+    actions=[ActionSpec(id="flag_misselling", label="Flag mis-selling",
+                        requires_approval=True)],
+    sample_data_path="data/verticals/wealth.json",
+    golden_cache_key="wealth",
+))
+
+
+CORPORATE = register(VerticalConfig(
+    key="corporate",
+    name="Corporate — UBO / Ownership",
+    icon="🏢",
+    accent_color="#998DD9",
+    tagline="Unwind circular ownership to the true beneficial owner — pure OAG.",
+    regulator="RBI CDD/EDD · FATF Rec 24",
+    object_types=[
+        ObjectTypeSpec(name="Company", icon="🏢", color="#998DD9",
+                       key_props=["name", "jurisdiction"]),
+        ObjectTypeSpec(name="UBO", icon="👑", color="#FF5630",
+                       key_props=["name", "nationality"]),
+    ],
+    link_types=["owns", "declares_ubo", "raised_on"],
+    kpi_cards=[
+        KPI(label="Companies in loop", value="3", delta="circular"),
+        KPI(label="Shared UBO", value="1"),
+        KPI(label="Offshore shells", value="2"),
+    ],
+    signals=[
+        SignalSpec(id="circular_flow", label="Circular ownership",
+                   why="Holding companies own each other in a loop, obscuring the UBO.",
+                   params={"node_type": "Company", "link_type": "owns",
+                           "typology": "circular_ownership"}),
+        SignalSpec(id="shared_attribute_ring", label="Shared-UBO cluster",
+                   why="Many companies declare one common ultimate beneficial owner.",
+                   params={"hub_type": "UBO", "min_members": 5,
+                           "typology": "shared_ubo_cluster"}),
+    ],
+    actions=[ActionSpec(id="escalate_kyc_review", label="Escalate KYC review",
+                        requires_approval=True)],
+    sample_data_path="data/verticals/corporate.json",
+    golden_cache_key="corporate",
+))

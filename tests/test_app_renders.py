@@ -10,5 +10,6 @@ from streamlit.testing.v1 import AppTest
 def test_app_renders_without_exception():
     at = AppTest.from_file("app/streamlit_app.py", default_timeout=30).run()
     assert not at.exception, [str(e.value) for e in at.exception]
-    # Alert Queue, Investigation, Approvals, Audit, Procurement, Insurance SIU, Lending EWS
-    assert len(at.tabs) == 7
+    # Alert Queue, Investigation, Approvals, Audit + 5 verticals
+    # (Procurement, Insurance SIU, Lending EWS, Wealth, Corporate)
+    assert len(at.tabs) == 9
