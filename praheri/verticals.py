@@ -89,3 +89,36 @@ def register(config: VerticalConfig) -> VerticalConfig:
 def get_config(key: str) -> VerticalConfig:
     """Look up a cartridge by key. Raises KeyError if absent (fail fast)."""
     return REGISTRY[key]
+
+
+# --------------------------------------------------------------------------- #
+# Cartridge definitions. Each vertical is just data. The engine never changes. #
+# --------------------------------------------------------------------------- #
+
+PROCUREMENT = register(VerticalConfig(
+    key="procurement",
+    name="Procurement — Maverick Spend",
+    icon="📦",
+    accent_color="#6554C0",
+    tagline="Same engine, a non-financial ontology — the platform thesis, proven.",
+    regulator="Internal controls · DoA policy",
+    object_types=[
+        ObjectTypeSpec(name="Requisition", icon="📝", color="#6554C0",
+                       key_props=["amount", "description", "status"]),
+        ObjectTypeSpec(name="Vendor", icon="🏭", color="#FFAB00",
+                       key_props=["name", "country", "risk_rating"]),
+        ObjectTypeSpec(name="Budget", icon="💰", color="#36B37E",
+                       key_props=["department", "cap", "spent", "remaining"]),
+    ],
+    link_types=["from_vendor", "against_budget"],
+    kpi_cards=[
+        KPI(label="Open requisitions", value="2"),
+        KPI(label="Budget cap (IT)", value="₹5,00,000"),
+        KPI(label="Over-budget POs", value="1", delta="needs MLRO"),
+    ],
+    signals=[],  # procurement gate is a budget rule, not a fraud-ring typology
+    actions=[ActionSpec(id="approve_purchase_order", label="Submit PO",
+                        requires_approval=True)],
+    sample_data_path="data/verticals/procurement.json",
+    golden_cache_key="procurement",
+))

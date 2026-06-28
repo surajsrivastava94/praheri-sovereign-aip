@@ -61,6 +61,140 @@ def render_ring_graph(account_ids: list[str], highlight: set[str]) -> None:
         html = open(f.name).read()
     components.html(html, height=540)
 
+def render_vertical_graph(g, highlight: set[str], accent: str = "#36B37E") -> None:
+    """Render any GenericOntologyStore.build_graph() output as a pyvis network.
+    Sibling of render_ring_graph (which is AML-store-bound) — keeps that untouched.
+    Node colour comes from per-type styling; highlighted nodes glow in `accent`."""
+    net = Network(height="520px", width="100%", bgcolor="#1a1a2e",
+                  font_color="white", directed=True)
+    net.barnes_hut(spring_length=120)
+    palette = ["#4C9AFF", "#FFAB00", "#FF5630", "#00B8D9", "#998DD9", "#57D9A3"]
+    kinds = sorted({d.get("kind", "node") for _, d in g.nodes(data=True)})
+    kind_color = {k: palette[i % len(palette)] for i, k in enumerate(kinds)}
+    for node, data in g.nodes(data=True):
+        kind = data.get("kind", "node")
+        color = accent if node in highlight else kind_color.get(kind, "#4C9AFF")
+        size = 28 if node in highlight else 18
+        net.add_node(node, label=data.get("label", node),
+                     title=f"{kind}: {node}", color=color, size=size)
+    for u, v, data in g.edges(data=True):
+        net.add_edge(u, v, title=data.get("label", ""), label=data.get("label", ""))
+    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False) as f:
+        net.save_graph(f.name)
+        html = open(f.name).read()
+    components.html(html, height=540)
+
+
+def render_vertical(config) -> None:
+    """Shared renderer for the config-driven shallow verticals. Same six bands for
+    every cartridge — the visual sameness IS the platform proof. Real traversal +
+    signal detection; narrative golden-cached. AML keeps its own bespoke tab."""
+    import json as _json
+
+    from praheri import vertical_engine
+    from praheri.governance import approve_purchase_order
+    from praheri.vertical_store import GenericOntologyStore
+
+    accent = config.accent_color
+    # 1) sector hero band
+    st.markdown(f"### {config.icon} {config.name}")
+    st.caption(config.tagline)
+    st.markdown(f"<span style='background:{accent};color:white;padding:2px 10px;"
+                f"border-radius:10px;font-size:0.8em'>{config.regulator}</span>",
+                unsafe_allow_html=True)
+
+    # 2) KPI row
+    if config.kpi_cards:
+        cols = st.columns(len(config.kpi_cards))
+        for col, kpi in zip(cols, config.kpi_cards):
+            col.metric(kpi.label, kpi.value, kpi.delta)
+
+    # load the cartridge's synthetic data (skip gracefully if not generated yet)
+    try:
+        data = _json.loads(open(config.sample_data_path).read())
+    except FileNotFoundError:
+        st.warning(f"No data for `{config.key}`. Run "
+                   "`python -m praheri.generate_verticals`.")
+        return
+    vstore = GenericOntologyStore(data)
+
+    # 3) Procurement is action-centric (budget gate), not investigation-centric.
+    if config.key == "procurement":
+        _render_procurement_actions(vstore, approve_purchase_order)
+        return
+
+    # 3') Investigation-centric verticals: alert queue -> investigate -> signals.
+    st.markdown("##### 🚨 Alerts")
+    alerts = vstore.query_objects("Alert")
+    if not alerts:
+        st.info("No alerts seeded for this vertical yet.")
+        return
+    for a in alerts:
+        root = a["linked_ids"].get("raised_on", a["properties"].get("root_id", ""))
+        root = root[0] if isinstance(root, list) and root else root
+        if st.button(f"Investigate {a['id']} →", key=f"vinv_{config.key}_{a['id']}"):
+            st.session_state[f"vinv_{config.key}"] = root
+
+    root_id = st.session_state.get(f"vinv_{config.key}")
+    if not root_id:
+        return
+    inv = vertical_engine.compute_vertical_investigation(config, vstore, root_id)
+    badge = {"FILE": "🔴", "ESCALATE": "🟠", "CLEAR": "🟢"}.get(inv["recommendation"], "⚪")
+    src = "🟢 Live" if inv["source"] == "live" else "💾 Cached"
+    c1, c2 = st.columns(2)
+    c1.metric("Recommendation", f"{badge} {inv['recommendation']}")
+    c2.metric("Source", src)
+
+    st.markdown("##### Ring graph (OAG traversal)")
+    render_vertical_graph(vstore.build_graph(inv["objects_touched"]),
+                          highlight=set(inv["cited_ids"]), accent=accent)
+
+    if inv["signals"]:
+        st.markdown("##### 🚦 Detected typology signals (engine)")
+        for s in inv["signals"]:
+            st.markdown(f"- **{s['typology']}** — {s['detail']}")
+    if inv["narrative"]:
+        st.markdown("##### Draft narrative")
+        st.write(inv["narrative"])
+    st.caption("Cited: " + ", ".join(f"`{i}`" for i in inv["cited_ids"]))
+
+    # govern: propose the vertical's action(s) into the SAME approval queue
+    if config.actions:
+        st.markdown("##### Actions")
+        acts = st.columns(len(config.actions))
+        for col, act in zip(acts, config.actions):
+            if col.button(act.label, key=f"vact_{config.key}_{act.id}"):
+                st.warning(f"Proposed {act.label} → see Approvals (MLRO). "
+                           "(Wired in U7.)")
+
+
+def _render_procurement_actions(vstore, approve_purchase_order) -> None:
+    """Procurement's per-requisition budget gate, rendered from the generic store."""
+    budget = vstore.query_objects("Budget")[0]["properties"]
+    remaining = budget["remaining"]
+    st.markdown("##### Requisitions")
+    for req in vstore.query_objects("Requisition"):
+        p = req["properties"]
+        vendor_ids = req["linked_ids"].get("from_vendor", [])
+        vname = (vstore.get_object("Vendor", vendor_ids[0])["properties"]["name"]
+                 if vendor_ids else "?")
+        over = p["amount"] > remaining
+        cols = st.columns([3, 2, 2, 2])
+        cols[0].write(f"**{req['id']}** · {p['description']}")
+        cols[1].write(f"`{vname}`")
+        cols[2].write(f"₹{p['amount']:,.0f}")
+        cols[2].caption("🔴 over budget" if over else "🟢 within budget")
+        if cols[3].button("Submit PO", key=f"po_{req['id']}"):
+            actor = st.session_state.get("_actor")
+            r = approve_purchase_order(actor, requisition_id=req["id"],
+                                       amount=p["amount"], budget_remaining=remaining)
+            if r["status"] == "PENDING_APPROVAL":
+                st.warning(f"{r['status']} — over budget, routed to MLRO "
+                           "(same approval gate as account freeze).")
+            else:
+                st.success(r)
+
+
 st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
 st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic data; decision-support only.")
@@ -68,6 +202,7 @@ st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic d
 # Demo persona toggle (analyst proposes, MLRO approves).
 role = st.sidebar.radio("Acting as", ["analyst", "mlro"])
 actor = Actor(id=f"demo_{role}", role=role)
+st.session_state["_actor"] = actor  # so render_vertical's actions can reach it
 oag_mode = st.sidebar.toggle("OAG mode (structured objects)", value=True,
                              help="Off = naive RAG over flattened text, for the side-by-side.")
 st.sidebar.info("Sovereignty demo: this runs with no external network calls. "
@@ -218,30 +353,9 @@ with tabs[3]:
     st.dataframe(rows if rows else [{"info": "no audit entries yet"}], width="stretch")
 
 with tabs[4]:
-    st.subheader("Procurement — same engine, different ontology")
-    st.caption("Vertical #2 proves the platform thesis: the SAME governance/audit "
-               "engine, a new ontology (Requisition/Vendor/Budget) and one action.")
-    from praheri import models_procurement as proc
+    # Procurement is now cartridge #1 — rendered through the SAME shared
+    # render_vertical() as every other shallow vertical (the platform thesis,
+    # made literal). The over-budget PO still hits the MLRO approval gate.
+    from praheri.verticals import get_config as _get_config
 
-    budget = proc.DEMO_BUDGET
-    remaining = budget.cap - budget.spent
-    st.metric(f"Budget {budget.budget_id} ({budget.department})",
-              f"₹{remaining:,.0f} remaining", f"cap ₹{budget.cap:,.0f}")
-
-    for req in proc.DEMO_REQUISITIONS:
-        vendor = next(v for v in proc.DEMO_VENDORS if v.vendor_id == req.vendor_id)
-        over = req.amount > remaining
-        cols = st.columns([3, 2, 2, 2])
-        cols[0].write(f"**{req.requisition_id}** · {req.description}")
-        cols[1].write(f"`{vendor.name}`")
-        cols[2].write(f"₹{req.amount:,.0f}")
-        cols[2].caption("🔴 over budget" if over else "🟢 within budget")
-        if cols[3].button("Submit PO", key=f"po_{req.requisition_id}"):
-            r = governance.approve_purchase_order(
-                actor, requisition_id=req.requisition_id, amount=req.amount,
-                budget_remaining=remaining)
-            if r["status"] == "PENDING_APPROVAL":
-                st.warning(f"{r['status']} — over budget, routed to MLRO "
-                           "(same approval gate as account freeze).")
-            else:
-                st.success(r)
+    render_vertical(_get_config("procurement"))
