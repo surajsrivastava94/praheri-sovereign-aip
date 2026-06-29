@@ -80,6 +80,10 @@
   .btn:hover{background:var(--accent); color:#04101f}
   .btn-solid{background:var(--accent); color:#04101f}
   .btn-solid:hover{background:#6cabff; border-color:#6cabff}
+  /* nav-scoped: .navlinks a (0,1,1) would otherwise override .btn color (0,1,0) */
+  .navlinks a.btn{color:var(--accent)}
+  .navlinks a.btn:hover{color:#04101f}
+  .navlinks a.btn-solid{color:#04101f}
   @media(max-width:720px){ .navlinks a:not(.btn){display:none} }
 
   /* ---- hero ---- */
