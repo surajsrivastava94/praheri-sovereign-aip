@@ -4,3 +4,13 @@ gatherUsageStats = false
 
 [server]
 headless = true
+
+# Palantir-dark operational theme — matches the standalone explainer page so the
+# explainer and the live console read as one product.
+[theme]
+base = "dark"
+primaryColor = "#4C9AFF"
+backgroundColor = "#0A0E1A"
+secondaryBackgroundColor = "#0F172A"
+textColor = "#E8EDF5"
+font = "sans serif"

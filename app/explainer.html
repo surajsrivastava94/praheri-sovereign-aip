@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Praheri — Sovereign AIP for Financial Crime</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ---- Palantir-grade dark operational system. Charcoal canvas, blue primary
+        (matches the live Streamlit console), hairlines, tight tracking, expo motion. ---- */
+  :root{
+    --bg:#0A0E1A;            /* canvas — matches Streamlit theme backgroundColor */
+    --panel:#0F172A;         /* elevated panel — matches secondaryBackgroundColor */
+    --panel-2:#131C30;       /* raised */
+    --deep:#070B14;
+    --text:#E8EDF5;          /* primary text — matches Streamlit textColor */
+    --muted:#94A3B8;
+    --faint:#5B6B82;
+    --hair:rgba(255,255,255,0.09);
+    --hair-strong:rgba(255,255,255,0.16);
+    --accent:#4C9AFF;        /* primary — matches Streamlit primaryColor */
+    --accent-dim:rgba(76,154,255,0.13);
+    --ok:#36B37E; --warn:#FFAB00; --danger:#FF5630; --violet:#998DD9; --teal:#13C9BA;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --ease:cubic-bezier(.19,1,.22,1);
+    --ease-io:cubic-bezier(.645,.045,.355,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+    font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* subtle grid backdrop — instrument-panel texture */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--hair) 1px,transparent 1px),
+      linear-gradient(90deg,var(--hair) 1px,transparent 1px);
+    background-size:64px 64px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 10%,transparent 75%);
+            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 10%,transparent 75%);
+    opacity:.5;
+  }
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px; position:relative; z-index:1}
+  a{color:inherit; text-decoration:none}
+
+  /* ---- type ---- */
+  .eyebrow{
+    font-family:var(--mono); text-transform:uppercase; letter-spacing:.22em;
+    font-size:11px; color:var(--accent); font-weight:500;
+  }
+  h1{font-size:clamp(2.6rem,6.2vw,5rem); line-height:1.02; letter-spacing:-0.03em; font-weight:700}
+  h2{font-size:clamp(1.8rem,3.6vw,2.7rem); line-height:1.08; letter-spacing:-0.025em; font-weight:700}
+  h3{font-size:1.18rem; letter-spacing:-0.01em; font-weight:600}
+  .lede{font-size:1.22rem; color:var(--muted); max-width:62ch; line-height:1.62}
+  .mono{font-family:var(--mono)}
+  .small{font-size:.92rem}
+
+  /* ---- nav ---- */
+  nav{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(12px);
+    background:rgba(10,14,26,0.78); border-bottom:1px solid var(--hair);
+  }
+  nav .wrap{display:flex; align-items:center; justify-content:space-between; height:62px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:700; letter-spacing:-0.02em; font-size:1.05rem}
+  .brand .glyph{width:24px;height:24px;flex:none}
+  .navlinks{display:flex; gap:30px; align-items:center}
+  .navlinks a{font-size:.92rem; color:var(--muted); transition:color .2s var(--ease)}
+  .navlinks a:hover{color:var(--text)}
+  .btn{
+    font-family:var(--mono); font-size:.82rem; letter-spacing:.04em; font-weight:500;
+    padding:9px 18px; border:1px solid var(--accent); color:var(--accent);
+    border-radius:3px; transition:all .18s var(--ease-io); white-space:nowrap;
+  }
+  .btn:hover{background:var(--accent); color:#04101f}
+  .btn-solid{background:var(--accent); color:#04101f}
+  .btn-solid:hover{background:#6cabff; border-color:#6cabff}
+  @media(max-width:720px){ .navlinks a:not(.btn){display:none} }
+
+  /* ---- hero ---- */
+  .hero{padding:108px 0 60px; position:relative}
+  .hero h1{max-width:17ch}
+  .hero .lede{margin-top:24px}
+  .hero-cta{margin-top:38px; display:flex; gap:14px; flex-wrap:wrap}
+  .hero-meta{
+    margin-top:54px; display:flex; gap:34px; flex-wrap:wrap;
+    padding-top:26px; border-top:1px solid var(--hair);
+  }
+  .hero-meta div{display:flex; flex-direction:column; gap:3px}
+  .hero-meta .k{font-family:var(--mono); font-size:1.5rem; font-weight:500; color:var(--text)}
+  .hero-meta .l{font-size:.8rem; color:var(--faint); text-transform:uppercase; letter-spacing:.12em}
+
+  /* network canvas behind hero */
+  #net{position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:.55}
+  .hero .wrap{position:relative; z-index:2}
+
+  /* ---- sections ---- */
+  section{padding:70px 0; position:relative}
+  .sec-head{max-width:64ch; margin-bottom:46px}
+  .sec-head .eyebrow{display:block; margin-bottom:16px}
+  .sec-head p{color:var(--muted); margin-top:16px; font-size:1.08rem}
+  .divider{height:1px; background:var(--hair); border:0}
+
+  /* ---- ontology layer diagram ---- */
+  .layers{display:grid; gap:14px; margin-top:8px}
+  .layer{
+    border:1px solid var(--hair); border-radius:5px; background:var(--panel);
+    padding:22px 24px; display:grid; grid-template-columns:140px 1fr; gap:24px; align-items:start;
+    transition:border-color .2s var(--ease), transform .2s var(--ease-io);
+  }
+  .layer:hover{border-color:var(--hair-strong); transform:translateX(4px)}
+  .layer .tag{font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); padding-top:3px}
+  .layer h3{margin-bottom:7px}
+  .layer p{color:var(--muted); font-size:.98rem}
+  .layer .chips{margin-top:13px; display:flex; gap:8px; flex-wrap:wrap}
+  .chip{font-family:var(--mono); font-size:.74rem; color:var(--muted); border:1px solid var(--hair); border-radius:3px; padding:3px 9px; background:var(--deep)}
+  @media(max-width:640px){ .layer{grid-template-columns:1fr; gap:10px} }
+
+  /* ---- OAG vs RAG ---- */
+  .vs{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px}
+  .vs .card{border:1px solid var(--hair); border-radius:5px; padding:26px; background:var(--panel)}
+  .vs .rag{opacity:.9}
+  .vs .oag{border-color:rgba(76,154,255,0.4); background:linear-gradient(180deg,var(--accent-dim),var(--panel) 60%)}
+  .vs .label{font-family:var(--mono); font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:14px}
+  .vs .rag .label{color:var(--faint)} .vs .oag .label{color:var(--accent)}
+  .vs h3{margin-bottom:10px}
+  .vs p{color:var(--muted); font-size:.96rem; margin-bottom:14px}
+  .vs .ex{font-family:var(--mono); font-size:.82rem; color:var(--muted); background:var(--deep); border:1px solid var(--hair); border-radius:4px; padding:13px 15px; line-height:1.55; white-space:pre-wrap}
+  .vs .ex .id{color:var(--accent)}
+  @media(max-width:720px){ .vs{grid-template-columns:1fr} }
+
+  /* ---- principles ---- */
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media(max-width:860px){ .grid3{grid-template-columns:1fr} }
+  .pcard{border:1px solid var(--hair); border-radius:5px; padding:26px; background:var(--panel); position:relative; overflow:hidden}
+  .pcard::before{content:""; position:absolute; top:0; left:0; width:38px; height:2px; background:var(--accent)}
+  .pcard .n{font-family:var(--mono); font-size:.78rem; color:var(--faint); letter-spacing:.1em}
+  .pcard h3{margin:14px 0 10px}
+  .pcard p{color:var(--muted); font-size:.96rem}
+  .pcard ul{list-style:none; margin-top:14px; display:grid; gap:9px}
+  .pcard li{font-size:.92rem; color:var(--muted); padding-left:18px; position:relative}
+  .pcard li::before{content:"▸"; position:absolute; left:0; color:var(--accent); font-size:.8rem}
+
+  /* ---- pipeline strip ---- */
+  .pipe{display:flex; align-items:center; gap:0; flex-wrap:wrap; border:1px solid var(--hair); border-radius:5px; background:var(--panel); padding:20px 10px; justify-content:center}
+  .pipe .step{font-family:var(--mono); font-size:.86rem; padding:8px 16px; color:var(--text); letter-spacing:.03em}
+  .pipe .arrow{color:var(--accent); font-size:.9rem}
+  .pipe .step b{color:var(--accent); font-weight:500}
+
+  /* ---- sectors ---- */
+  .sectors{display:grid; gap:14px; margin-top:8px}
+  .sector{
+    border:1px solid var(--hair); border-radius:6px; background:var(--panel); overflow:hidden;
+    transition:border-color .2s var(--ease);
+  }
+  .sector:hover{border-color:var(--hair-strong)}
+  .sector summary{
+    list-style:none; cursor:pointer; padding:22px 26px; display:grid;
+    grid-template-columns:44px 1fr auto; gap:18px; align-items:center;
+  }
+  .sector summary::-webkit-details-marker{display:none}
+  .sector .ico{width:40px; height:40px; border-radius:6px; display:grid; place-items:center; font-size:20px; border:1px solid var(--hair); background:var(--deep)}
+  .sector .st{display:flex; flex-direction:column; gap:4px}
+  .sector .st .nm{font-weight:600; font-size:1.08rem; letter-spacing:-0.01em}
+  .sector .st .rg{font-family:var(--mono); font-size:.74rem; color:var(--faint); letter-spacing:.06em; text-transform:uppercase}
+  .sector .ex-ic{color:var(--faint); font-family:var(--mono); transition:transform .25s var(--ease-io); font-size:1.3rem}
+  .sector[open] .ex-ic{transform:rotate(45deg); color:var(--accent)}
+  .sector .body{padding:0 26px 26px 88px; color:var(--muted); font-size:.98rem; line-height:1.62}
+  .sector .body .meta{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:18px}
+  .sector .body .meta .m{border:1px solid var(--hair); border-radius:4px; padding:12px 14px; background:var(--deep)}
+  .sector .body .meta .m .ml{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin-bottom:5px}
+  .sector .body .meta .m .mv{font-size:.9rem; color:var(--text)}
+  .sector .body .meta .m .mv code{font-family:var(--mono); color:var(--accent); font-size:.85rem}
+  @media(max-width:640px){ .sector .body{padding-left:26px} .sector summary{grid-template-columns:40px 1fr auto} }
+
+  /* hero badge row */
+  .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:30px}
+  .badge{font-family:var(--mono); font-size:.74rem; letter-spacing:.05em; color:var(--muted); border:1px solid var(--hair); border-radius:20px; padding:6px 14px; display:flex; align-items:center; gap:7px}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+  /* ---- CTA band ---- */
+  .cta-band{border:1px solid var(--hair-strong); border-radius:8px; background:linear-gradient(135deg,var(--accent-dim),var(--panel) 65%); padding:54px; text-align:center; margin:30px 0}
+  .cta-band h2{margin-bottom:14px}
+  .cta-band p{color:var(--muted); max-width:54ch; margin:0 auto 28px}
+  .cta-band .hero-cta{justify-content:center}
+
+  footer{border-top:1px solid var(--hair); padding:40px 0 60px; color:var(--faint); font-size:.86rem}
+  footer .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center}
+  footer .mono{color:var(--muted)}
+
+  /* ---- scroll reveal ---- */
+  .reveal{opacity:0; transform:translateY(20px); transition:opacity .6s var(--ease), transform .5s var(--ease-io)}
+  .reveal.in{opacity:1; transform:none}
+  @media(prefers-reduced-motion:reduce){ .reveal{opacity:1; transform:none; transition:none} #net{display:none} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg class="glyph" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 4.4 3.4 8.3 8 9.6 4.6-1.3 8-5.2 8-9.6V6l-8-4z" stroke="#4C9AFF" stroke-width="1.6"/><circle cx="12" cy="11" r="2.4" fill="#4C9AFF"/><path d="M12 13.4V17M9.2 9.6L7 8.3M14.8 9.6L17 8.3" stroke="#4C9AFF" stroke-width="1.3"/></svg>
+      Praheri
+    </a>
+    <div class="navlinks">
+      <a href="#ontology">Ontology</a>
+      <a href="#oag">OAG vs RAG</a>
+      <a href="#principles">Principles</a>
+      <a href="#sectors">Sectors</a>
+      <a class="btn btn-solid" href="http://localhost:8501" id="launch-top">Launch console →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <canvas id="net"></canvas>
+  <div class="wrap">
+    <span class="eyebrow reveal">Sovereign AIP · On-prem · Open-weight Llama</span>
+    <h1 class="reveal" style="margin-top:18px">The investigation engine that <span style="color:var(--accent)">reasons over your world</span>, not text about it.</h1>
+    <p class="lede reveal">Praheri is a sovereign financial-crime platform built on a typed <b style="color:var(--text)">ontology</b> — a living digital twin of accounts, transactions, claims and companies. A local Llama traverses it to expose fraud rings, drafts the regulatory report, and <b style="color:var(--text)">proposes governed actions a human approves</b> — every step audited, nothing leaving the building.</p>
+    <div class="hero-cta reveal">
+      <a class="btn btn-solid" href="http://localhost:8501" id="launch-hero">Launch the console →</a>
+      <a class="btn" href="#ontology">What is the ontology?</a>
+    </div>
+    <div class="badges reveal">
+      <span class="badge"><span class="dot" style="background:var(--ok)"></span> Zero external egress</span>
+      <span class="badge"><span class="dot" style="background:var(--accent)"></span> 6 sectors · 1 engine</span>
+      <span class="badge"><span class="dot" style="background:var(--warn)"></span> Copilot, not autopilot</span>
+    </div>
+    <div class="hero-meta reveal">
+      <div><span class="k">6</span><span class="l">Ontologies</span></div>
+      <div><span class="k">18</span><span class="l">Object types</span></div>
+      <div><span class="k">18</span><span class="l">Link types</span></div>
+      <div><span class="k">0</span><span class="l">Lines of engine code per vertical</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ WHAT IS PRAHERI ============ -->
+<section id="what">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The problem</span>
+      <h2>An Indian bank cannot legally send this data to a frontier API.</h2>
+      <p>RBI data-localization makes the cloud copilot a non-starter — and a black-box API can't be audited, fine-tuned, or trusted with a freeze decision. Praheri is the alternative: the entire intelligence layer runs on-prem on open-weight Llama, over a typed model of the institution's own world, with a human in the loop on every consequential action.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ ONTOLOGY ============ -->
+<section id="ontology">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The foundation — the Ontology</span>
+      <h2>Not a database. A digital twin of the organization.</h2>
+      <p>Borrowing Palantir's framing: the ontology is a <b style="color:var(--text)">semantic layer</b> — the nouns and how they relate — and a <b style="color:var(--text)">kinetic layer</b> — how decisions are written back as governed actions. Your data stops being rows in a table and becomes a live, connected map of reality that both analysts and AI can reason over.</p>
+    </div>
+    <div class="layers">
+      <div class="layer reveal">
+        <span class="tag">Semantic ·<br>Objects</span>
+        <div>
+          <h3>Typed objects with properties</h3>
+          <p>Every real-world entity becomes a typed object — an <span class="mono" style="color:var(--accent)">Account</span>, a <span class="mono" style="color:var(--accent)">Transaction</span>, a <span class="mono" style="color:var(--accent)">Claim</span>, a <span class="mono" style="color:var(--accent)">Company</span> — carrying its own properties. An object type is the table; an object is the row.</p>
+          <div class="chips"><span class="chip">type</span><span class="chip">id</span><span class="chip">properties{}</span></div>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag">Semantic ·<br>Links</span>
+        <div>
+          <h3>Typed links between objects</h3>
+          <p>Relationships are first-class and typed — <span class="mono" style="color:var(--accent)">sent →</span>, <span class="mono" style="color:var(--accent)">serviced_by →</span>, <span class="mono" style="color:var(--accent)">owns →</span>. The links <i>are</i> the structure, so tracing a ring six hops out is a native graph traversal, not a recursive SQL nightmare.</p>
+          <div class="chips"><span class="chip">linked_ids[]</span><span class="chip">directed</span><span class="chip">traversable</span></div>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag">Kinetic ·<br>Actions</span>
+        <div>
+          <h3>Governed actions write decisions back</h3>
+          <p>The model never mutates data directly. It <b style="color:var(--text)">proposes</b> an action — freeze an account, file an STR, escalate a KYC review — which routes to a human approver and, on approval, is applied and audited. This is the closed loop: read the world → decide → act → the record updates.</p>
+          <div class="chips"><span class="chip">propose</span><span class="chip">human approves</span><span class="chip">audit log</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ OAG vs RAG ============ -->
+<section id="oag">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The differentiator — OAG</span>
+      <h2>RAG retrieves text about your world. OAG retrieves the world itself.</h2>
+      <p>Ontology-Augmented Generation feeds the model structured, typed, linked objects — not prose that <i>mentions</i> them. So the model reasons over ground-truth structure, and every claim it makes cites a real object ID. The fraud ring isn't described; it's traversed.</p>
+    </div>
+    <div class="vs">
+      <div class="card rag reveal">
+        <div class="label">RAG · text retrieval</div>
+        <h3>The model reads paragraphs and guesses</h3>
+        <p>Ten fuzzy case notes are retrieved as prose. The model re-parses English to infer who connects to whom — and may invent a link that was never written, or miss one that was.</p>
+        <div class="ex">"Account 4471 received several
+transfers in March; the holder
+shares an address with a customer
+flagged last year…"
+
+→ can't say it's 5 accounts / 12 txns
+→ links are inferred, unverifiable</div>
+      </div>
+      <div class="card oag reveal">
+        <div class="label">OAG · ontology retrieval</div>
+        <h3>The model traverses real structure</h3>
+        <p>The same ring is retrieved as typed objects with their actual links. The model follows the edges, sees the cycle, and names every node by ID. The structure is the evidence.</p>
+        <div class="ex">{ type:<span class="id">"Account"</span>, id:<span class="id">"ACC-4471"</span>,
+  properties:{ risk: 0.91 },
+  linked_ids:[<span class="id">"TXN-99"</span>,<span class="id">"TXN-102"</span>] }
+
+→ 5 Account · 12 Transaction links
+→ near-circular flow, cited by ID</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ PRINCIPLES / USP ============ -->
+<section id="principles">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Why Praheri</span>
+      <h2>Sovereign by architecture. Governed by design.</h2>
+    </div>
+    <div class="grid3">
+      <div class="pcard reveal">
+        <span class="n">01</span>
+        <h3>Sovereign &amp; open-weight</h3>
+        <p>The whole stack runs on-prem on open-weight Llama. Compliance by construction, not by promise.</p>
+        <ul>
+          <li>Your data never leaves the building</li>
+          <li>RBI localization is the architecture, not a setting</li>
+          <li>No per-token tax, no vendor lock-in</li>
+          <li>Auditable, fine-tunable weights</li>
+        </ul>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">02</span>
+        <h3>Copilot, not autopilot</h3>
+        <p>The model proposes; a human approves; everything is audited. No mutation without a governed action.</p>
+        <ul>
+          <li>High-stakes actions need a human signature</li>
+          <li>Freezes &amp; filings route to an approval queue</li>
+          <li>Append-only audit: actor, time, model</li>
+          <li>Defensible in front of a regulator</li>
+        </ul>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">03</span>
+        <h3>One engine, six sectors</h3>
+        <p>Swap the ontology cartridge and a new sector lights up — zero engine code changed.</p>
+        <ul>
+          <li>The investigation loop is universal</li>
+          <li>Only the nouns change per vertical</li>
+          <li>Six verticals, one codebase</li>
+          <li>Build once, monetize six times</li>
+        </ul>
+      </div>
+    </div>
+    <div style="margin-top:34px" class="reveal">
+      <div class="pipe">
+        <span class="step">Triage</span><span class="arrow">→</span>
+        <span class="step">Traverse</span><span class="arrow">→</span>
+        <span class="step">Detect</span><span class="arrow">→</span>
+        <span class="step">Decide</span><span class="arrow">→</span>
+        <span class="step"><b>Govern</b></span><span class="arrow">→</span>
+        <span class="step">Audit</span>
+      </div>
+      <p class="small" style="text-align:center; color:var(--faint); margin-top:14px; font-family:var(--mono); letter-spacing:.05em">This pipeline is unchanged across all verticals.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ SECTORS ============ -->
+<section id="sectors">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The cartridges — six sectors</span>
+      <h2>Same engine. Different ontology. Expand each to see what it does.</h2>
+      <p>Each sector is a configuration — a set of typed objects, the signals to detect, and the governed actions a human approves. The engine underneath never changes.</p>
+    </div>
+    <div class="sectors">
+
+      <details class="sector reveal" open>
+        <summary>
+          <span class="ico" style="border-color:rgba(255,86,48,0.4)">🛡️</span>
+          <span class="st"><span class="nm">AML — Anti-Money-Laundering</span><span class="rg">The hero · RBI · FIU-IND · STR filing</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          Banks generate thousands of transaction-monitoring alerts a day; analysts drown in false positives while real laundering hides in the noise. Praheri traverses from the flagged account across its transaction links to counterparties, customers and shared devices to expose the surrounding network — then drafts a Suspicious Transaction Report grounded in object IDs.
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Account · Transaction · Device · Counterparty</code></div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">Structuring / smurfing, layering, funnel accounts, circular mule flows</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>request_account_freeze</code> · <code>file_str</code> → MLRO approves</div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sector reveal">
+        <summary>
+          <span class="ico" style="border-color:rgba(255,86,48,0.4)">🚑</span>
+          <span class="st"><span class="nm">Insurance — Claims-Fraud SIU</span><span class="rg">IRDAI · DPDP Act 2023</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          A single claim looks legitimate in isolation — organized fraud only shows up in the links <i>between</i> claims. Praheri traverses from a suspicious claim to its policyholder, repair garage, claimant and policy, surfacing entities that recur across supposedly unrelated claims. The signal is shared-node density: one workshop or person at the center of many "accidents."
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Claim · Garage · Claimant · Policy</code></div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">Staged-accident rings, garage/provider collusion, identity reuse</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>refer_to_siu</code> — hold payout pending review</div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sector reveal">
+        <summary>
+          <span class="ico" style="border-color:rgba(0,184,217,0.4)">🏦</span>
+          <span class="st"><span class="nm">Lending — Early-Warning Signals</span><span class="rg">RBI EWS (&gt;₹5 Cr) · Digital Lending 2022</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          Loans rarely go bad overnight; stress is visible months before an account is classified NPA, but the signals sit scattered across systems. Praheri traverses from a borrower to its loans, directors, related parties and repayment history to assemble a live risk picture — catching distress spreading through a shared-control network before it surfaces in the books.
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Borrower · Loan · Director · Inflow</code></div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">EMI-bounce stress, common-director contagion, circular related-party lending</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>margin_call</code> · <code>downgrade_rating</code> (SMA)</div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sector reveal">
+        <summary>
+          <span class="ico" style="border-color:rgba(54,179,126,0.4)">📈</span>
+          <span class="st"><span class="nm">Wealth — Suitability &amp; Mis-selling</span><span class="rg">SEBI IA Regs 2013 · SCORES</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          Advisors face incentives to push high-commission products onto clients they don't fit, exposing the firm to SEBI action and restitution. Praheri traverses from a client to their suitability profile, sales, products and advisor, comparing what was sold against the client's documented risk appetite — and flagging advisors who breach repeatedly across a book.
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Client · SuitabilityProfile · Sale · Product · Adviser</code></div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">Suitability breach, churning, advisor-level mis-selling clusters</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>flag_misselling</code> → compliance approves</div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sector reveal">
+        <summary>
+          <span class="ico" style="border-color:rgba(153,141,217,0.4)">🏢</span>
+          <span class="st"><span class="nm">Corporate — UBO / Ownership</span><span class="rg">RBI CDD/EDD · FATF Rec 24</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          Regulators require knowing the real human Ultimate Beneficial Owner behind a corporate customer, but ownership is deliberately obscured through layered holdings across jurisdictions. Praheri traverses the company-owns-company graph through multiple layers to compute effective control and resolve the true UBO — the signal is the shape of the ownership graph itself.
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Company · UBO</code> via <code>owns →</code> shareholding</div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">Circular / cross-holdings, shell layers, &lt;25% threshold evasion</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>escalate_kyc_review</code> (Enhanced Due Diligence)</div></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="sector reveal">
+        <summary>
+          <span class="ico" style="border-color:rgba(101,84,192,0.4)">📦</span>
+          <span class="st"><span class="nm">Procurement — Maverick Spend</span><span class="rg">Internal controls · DoA policy</span></span>
+          <span class="ex-ic">+</span>
+        </summary>
+        <div class="body">
+          The non-financial proof of the platform thesis: enterprises lose margin and invite collusion when employees buy off-contract or split orders to dodge approval limits. Praheri traverses from a requisition to its vendor, budget and contract, checking spend against policy and the Delegation-of-Authority matrix — the exact same engine, a completely different ontology.
+          <div class="meta">
+            <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Requisition · Vendor · Budget</code></div></div>
+            <div class="m"><div class="ml">Detects</div><div class="mv">Maverick spend, budget / DoA breach, invoice-splitting, vendor collusion</div></div>
+            <div class="m"><div class="ml">Governed action</div><div class="mv"><code>approve_purchase_order</code> — over-budget → same MLRO gate</div></div>
+          </div>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section style="padding-top:30px">
+  <div class="wrap">
+    <div class="cta-band reveal">
+      <span class="eyebrow">See it run</span>
+      <h2 style="margin-top:14px">Pick an alert. Watch the ring light up.</h2>
+      <p>The live console runs the full loop: triage an alert, traverse the ontology, expose the fraud ring, draft the report, propose a freeze, approve it as the MLRO, and read the audit trail — all on-prem, with no network egress.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="http://localhost:8501" id="launch-cta">Launch the console →</a>
+        <a class="btn" href="#top">Back to top</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Praheri · Sovereign AIP on Llama · synthetic data, decision-support only</span>
+    <span class="mono">on-prem · open-weight · zero egress</span>
+  </div>
+</footer>
+
+<script>
+  /* ---- scroll reveal (staggered, expo) ---- */
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting){
+        const sib = [...e.target.parentElement.children].filter(c=>c.classList.contains('reveal'));
+        const idx = sib.indexOf(e.target);
+        e.target.style.transitionDelay = Math.min(idx,6)*70 + 'ms';
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  /* ---- hero network graph: nodes + thin edges, sequential light-up ---- */
+  (function(){
+    const c = document.getElementById('net'); if(!c) return;
+    const ctx = c.getContext('2d');
+    let W,H,DPR,nodes=[],edges=[],t=0,raf;
+    const COL='#4C9AFF';
+    function size(){
+      DPR=Math.min(window.devicePixelRatio||1,2);
+      W=c.clientWidth; H=c.clientHeight;
+      c.width=W*DPR; c.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    function build(){
+      nodes=[]; edges=[];
+      const N = W<700?22:40;
+      for(let i=0;i<N;i++){
+        nodes.push({x:Math.random()*W, y:Math.random()*H, vx:(Math.random()-.5)*0.18, vy:(Math.random()-.5)*0.18, r:Math.random()*1.6+1.2, p:Math.random()*Math.PI*2});
+      }
+      // connect near neighbours
+      for(let i=0;i<N;i++){
+        let d=[]; for(let j=0;j<N;j++) if(i!==j) d.push([j,Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y)]);
+        d.sort((a,b)=>a[1]-b[1]);
+        for(let k=0;k<2;k++){ if(d[k]) edges.push([i,d[k][0],Math.random()*Math.PI*2]); }
+      }
+    }
+    function loop(){
+      ctx.clearRect(0,0,W,H); t+=0.012;
+      // edges
+      for(const [a,b,ph] of edges){
+        const na=nodes[a], nb=nodes[b];
+        const dist=Math.hypot(na.x-nb.x,na.y-nb.y);
+        if(dist>240) continue;
+        const pulse=(Math.sin(t*1.3+ph)+1)/2;
+        ctx.strokeStyle=`rgba(76,154,255,${0.04+pulse*0.14})`;
+        ctx.lineWidth=0.6;
+        ctx.beginPath(); ctx.moveTo(na.x,na.y); ctx.lineTo(nb.x,nb.y); ctx.stroke();
+      }
+      // nodes
+      for(const n of nodes){
+        n.x+=n.vx; n.y+=n.vy;
+        if(n.x<0||n.x>W) n.vx*=-1; if(n.y<0||n.y>H) n.vy*=-1;
+        const glow=(Math.sin(t*1.6+n.p)+1)/2;
+        ctx.fillStyle=`rgba(76,154,255,${0.35+glow*0.5})`;
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=`rgba(76,154,255,${0.05+glow*0.08})`;
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.r*4,0,Math.PI*2); ctx.fill();
+      }
+      raf=requestAnimationFrame(loop);
+    }
+    function start(){ size(); build(); cancelAnimationFrame(raf); loop(); }
+    if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches){
+      start(); window.addEventListener('resize',()=>{clearTimeout(window._rz); window._rz=setTimeout(start,200)});
+    }
+  })();
+</script>
+</body>
+</html>

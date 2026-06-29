@@ -19,6 +19,8 @@ data/
 # Streamlit / pyvis artifacts
 .streamlit/secrets.toml
 *.html
+# …except the standalone explainer/landing page (a committed deliverable).
+!app/explainer.html
 
 # OS / editor
 .DS_Store

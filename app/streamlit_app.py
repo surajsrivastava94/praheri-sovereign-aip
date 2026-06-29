@@ -328,6 +328,16 @@ st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
 st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic data; decision-support only.")
 
+# Link back to the standalone explainer ("why/what" narrative). Served by the
+# tiny helper in app/serve_explainer.py (or opened directly); see HANDOFF.
+st.sidebar.markdown(
+    "<a href='http://localhost:8000/explainer.html' target='_blank' "
+    "style='display:block;text-align:center;font-family:monospace;font-size:0.8rem;"
+    "letter-spacing:0.04em;padding:8px 12px;border:1px solid #4C9AFF;color:#4C9AFF;"
+    "border-radius:3px;text-decoration:none;margin-bottom:14px'>"
+    "📖 What is Praheri? — open explainer</a>",
+    unsafe_allow_html=True)
+
 # Demo persona toggle (analyst proposes, MLRO approves).
 role = st.sidebar.radio("Acting as", ["analyst", "mlro"])
 actor = Actor(id=f"demo_{role}", role=role)
