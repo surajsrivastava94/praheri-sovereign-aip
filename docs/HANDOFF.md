@@ -2,7 +2,7 @@
 
 **Project root:** `~/Praheri-AIP/` (the git repo + all code live here). `Cowork-Brainstorm/` is reference-only material (the Build Bible source + original starter zip) and is gitignored.
 
-**Today's goal:** Continue the multi-vertical OS build on branch `feat/multi-vertical-os` — **P4**: build the Platform dashboard (U8 — engine box + 6 cartridge tiles + live counters derived from the `verticals.REGISTRY`, the hero "OS" screen) and run the `ui-ux-pro-max` polish pass on the shared `render_vertical` template (U9). Then P5 (U10): prime golden caches, update `docs/demo_script.md` with the cartridge-swap beat, rehearse. Plan: `docs/plans/2026-06-28-001-feat-multi-vertical-sovereign-aip-os-plan.md`. Keep the AML hero zero-diff; 5 verticals (P0–P3) already shipped, 106 deterministic tests green.
+**Today's goal:** The build is done and deployed — **rehearse the live demo and record a backup video.** Walk the full 3-min flow per `docs/demo_script.md` (Platform → Alert Queue → Investigate `ALERT-R001` → ring → STR → propose freeze → MLRO approve → audit → sovereignty → a vertical swap, e.g. Corporate). Click through the 4 not-yet-eyeballed verticals (Insurance/Lending/Wealth/Procurement) live. Build the deck from `docs/DECK_OUTLINE.md`. The shareable explainer is live at **https://praheri.suraj94.cloud**. Optional/deferred: Next.js+Tailwind console rebuild; range-aware fix for the flaky AML live test. Keep the AML hero zero-diff.
 
 ---
 
@@ -21,15 +21,19 @@
 ```bash
 cd ~/Praheri-AIP
 source .venv/bin/activate
-ollama serve                  # llama3.1:8b + nomic-embed-text must be pulled
-python -m praheri.generate    # fresh deterministic data (resets frozen accounts)
-streamlit run app/streamlit_app.py
-pytest                        # 52 tests (live ones need Ollama)
+ollama serve                       # llama3.1:8b + nomic-embed-text must be pulled
+python -m praheri.generate         # fresh AML data (resets frozen accounts)
+python -m praheri.generate_verticals   # vertical data (gitignored; regenerate)
+python -m app.serve_explainer &    # explainer at http://localhost:8000/explainer.html
+streamlit run app/streamlit_app.py # console at http://localhost:8501
+pytest                             # 111 tests (live ones need Ollama; 1 known flaky AML)
 ```
+**Shareable explainer (deployed):** https://praheri.suraj94.cloud
+**Re-deploy explainer after edits:** `cp app/explainer.html .deploy/index.html && netlify deploy --dir .deploy --prod --site bb16afd0-2bf0-4f72-9b6e-aeb3f95e987a`
 
 ## Constraints (from CLAUDE.md — still in force)
 - MVP scope only; model stays Llama; mutations only via `@action`; synthetic data only; everything audited; commit per green increment.
 - The build is code-complete — remaining work is rehearsal + deck, not new features. Don't gold-plate.
 
 ## State at handoff
-All 17 units (U0–U16) shipped · MVP checkpoint tagged · 52 tests green · no git remote (local-only). This session: restructured so `~/Praheri-AIP/` is the project root (moved up out of `Cowork-Brainstorm/praheri-starter/`); `.venv` recreated; suite re-verified green at the new root.
+**Multi-vertical build COMPLETE (U1–U10) + UI revamped + deployed.** AML hero (U0–U16) zero-diff throughout. Platform dashboard + 5 verticals + golden caches all shipped; Palantir-dark `app/explainer.html` live at **https://praheri.suraj94.cloud** (Netlify + Hostinger DNS); console restyled dark to match. `feat/multi-vertical-os` **merged to `main`** (fast-forward, `965ff7e`) and pushed; **repo is now public**. 111 deterministic + vertical tests green (+1 known flaky AML live test). Remaining work is rehearsal + deck, not new features.

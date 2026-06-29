@@ -1,5 +1,50 @@
 # Praheri — Session Log
 
+## [2026-06-29] Session 3 — P4+P5 complete · UI revamp · deployed shareable link
+
+### Outcome
+Finished the multi-vertical build (U8–U10, P4+P5), then revamped the UI into a Palantir-grade dark experience and **deployed a public shareable explainer at https://praheri.suraj94.cloud**. Merged `feat/multi-vertical-os` → `main`, made the repo public, pushed everything. 8 commits this session.
+
+### What happened (in order)
+1. `/start_sync` → goal was P4 (Platform dashboard + polish) then P5 (caches + rehearse).
+2. **P4 via subagent-driven-development** (implementer → spec review → quality review per unit):
+   - **U8** Platform dashboard: `render_platform()` + `verticals.platform_counters()` (counters derived from REGISTRY, test recomputes independently so they can't drift). Added as tab 0; all `tabs[N]` re-indexed +1; `test_app_renders` 9→10. Commit `8276942`.
+   - **U9** `ui-ux-pro-max` polish: shared inline-HTML helpers (`_hero_band`/`_kpi_card_html`/`_section`) themed by `accent_color`, no global CSS bleed, AML untouched. Commit `62fde97`.
+3. **Live browser click-through** (agent-browser) surfaced a real bug: hero/engine-box captions were dark-on-dark (gradient faded to pale over Streamlit's light page). Fixed by anchoring bands on opaque `_SURFACE` + accent tint on top. Commit `3a1afe6`.
+4. **P5 (U10)**: closed the vertical narrative cache loop — `compute_vertical_investigation` drafts live via Llama on a FILE-case cache miss, writes back, degrades gracefully on `LlamaUnavailable` (CLEAR cases never call the model). Primed + committed 4 golden caches; demo script updated. Code-review caught a demo howler — corporate narrative said "United Business Owner" → hand-fixed to "Ultimate Beneficial Owner" in the committed JSON. Commit `5b19e5e`. Full suite 111 green (the 1 failure was the known flaky AML live test; passed on isolated retry).
+5. **User feedback: disliked the UI, confused by it.** Chose (via AskUserQuestion) a Palantir-dark revamp: standalone explainer page + dark console, live click-through priority. Ran a background research agent (Palantir ontology framing + design tokens from their shipped CSS/Blueprint) → `docs/research/palantir-ontology-and-design-brief.md`.
+6. Built **`app/explainer.html`** (animated network hero, ontology semantic+kinetic layers, OAG-vs-RAG, USP cards, 6 sectors with detailed "what it does"). Native dark Streamlit theme so console matches. `app/serve_explainer.py` static server. Commit `defff61`.
+7. **User asked to deploy + share.** Chose Netlify (gh already authed; console can't/shouldn't go to a public host — sovereignty). Deployed → `praheri-sovereign-aip.netlify.app`, then added custom domain **praheri.suraj94.cloud** (Hostinger CNAME, SSL green in minutes). Made repo **public**; added a "Run it yourself" section (5-command steps + `mailto:emails2suraj@gmail.com`). Commits `a6ec4c5`, `31b6c97`, `965ff7e`.
+8. **Merged `feat/multi-vertical-os` → `main`** (fast-forward), pushed `main` + branch. `/stop_sync`.
+
+### Key decisions
+- **Ship on Streamlit today, defer Next.js+Tailwind.** Full console rebuild is 3–5 days and risks the working demo; explainer carries the "wow". (User agreed.)
+- **Deploy the explainer only; console stays local.** Hosting the console publicly would break the sovereignty premise AND no free host runs Ollama. CTAs route remote viewers to GitHub + local run steps + email.
+- **Native Streamlit `[theme]` dark, not CSS hacks** — reliable, and the existing dark inline cards finally sit right.
+- **Explainer accent = blue `#4C9AFF`** (matches console primaryColor) rather than Palantir's forest green, so explainer↔console feel like one product; borrowed all the structural Palantir language (hairlines, tight tracking, eyebrows, expo motion, network hero).
+- **Merge via fast-forward** (main hadn't diverged) — clean linear history.
+
+### Issues encountered + resolved
+- Dark-on-dark hero/engine captions (U9) → re-based the gradient on opaque surface. ✅
+- `*.html` gitignore rule silently excluded `app/explainer.html` → negated it (`!app/explainer.html`). ✅
+- Corporate cached narrative "United Business Owner" factual error → hand-corrected committed JSON. ✅
+- Netlify needed interactive `netlify login` (user ran it) + site had to be created before deploy. ✅
+- Known flaky AML live test (`test_agent_calls_read_tool_…` / `test_str_narrative_cites_real_ids`, agent.py zero-diff) still intermittently fails under live Ollama; passes on isolated retry. → carry-over (AML-scoped range-aware assertion fix).
+
+### Artifacts produced
+- 8 commits on `main`/`feat/multi-vertical-os` (now identical, pushed, `965ff7e`).
+- New: `app/explainer.html`, `app/serve_explainer.py`, `docs/research/palantir-ontology-and-design-brief.md`, `docs/research/design-reference-template.png`.
+- Edited: `app/streamlit_app.py` (Platform dashboard, U9 polish, sidebar explainer link), `.streamlit/config.toml` (dark theme), `praheri/verticals.py` (`platform_counters`), `praheri/vertical_engine.py` (live narrative + cache), `tests/*`, `.gitignore`, `docs/demo_script.md`.
+- Committed golden caches: `demo_cache/{insurance_siu__GAR-RING-01,lending_ews__DIR-RING-01,wealth__ADV-RING-01,corporate__CO-A}.json`.
+- **Deployed:** https://praheri.suraj94.cloud (Netlify site `bb16afd0-2bf0-4f72-9b6e-aeb3f95e987a`).
+
+### Carry-over to next session
+- **Rehearse the live demo** (the original deferred goal) + record a backup video; build deck from `docs/DECK_OUTLINE.md`.
+- Verify the 5 verticals live in-browser end-to-end (AML + Corporate were clicked through this session; the other 4 only render-checked).
+- Fix the flaky AML live test (range-aware id assertion) — AML-scoped.
+- **Optional / deferred:** Next.js+Tailwind console rebuild (FastAPI wrapper first). Port the explainer to Next.js (~1–2 hrs) if a framework-consistent stack is wanted.
+- Tag a new checkpoint if desired (current `mvp-checkpoint` predates the multi-vertical work).
+
 ## [2026-06-28] Session 2 — Pivot to multi-vertical "Sovereign AIP OS" (P0–P3 shipped)
 
 ### Outcome
