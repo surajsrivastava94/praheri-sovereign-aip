@@ -47,3 +47,6 @@ Cowork-Brainstorm/
 
 # Netlify deploy staging (built from app/explainer.html)
 .deploy/
+
+# Netlify CLI state
+.netlify/
