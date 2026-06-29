@@ -115,6 +115,67 @@ def _kpi_card_html(label: str, value: str, delta: str | None, accent: str) -> st
         f"{delta_html}</div>")
 
 
+def _what_you_see(text: str, accent: str = _PLATFORM_ACCENT) -> None:
+    """A quiet 'what to watch here' guide-rail callout (matches the vertical hero)."""
+    st.markdown(
+        f"<div style='background:{accent}14;border-left:3px solid {accent};"
+        f"border-radius:0 8px 8px 0;padding:10px 14px;margin:4px 0 14px;"
+        f"color:{_FG};font-size:0.86rem;line-height:1.5'>"
+        f"<b style='color:{accent}'>👁 What you'll see here</b> · {text}</div>",
+        unsafe_allow_html=True)
+
+
+def _render_orientation() -> None:
+    """Collapsed 'how to read this console' + glossary, for a judge with no context.
+    Display-only; collapsed by default so the live demo stays uncluttered."""
+    with st.expander("🧭 New here? How to read this console", expanded=False):
+        st.markdown(
+            "**Praheri investigates financial-crime alerts the way an analyst "
+            "would** — but over a *typed ontology* (a live graph of accounts, "
+            "claims, companies…) instead of documents. One on-prem Llama model "
+            "runs the same six-step pipeline for every sector:")
+        st.markdown(
+            "1. **Triage** — rank the day's alerts by risk.\n"
+            "2. **Traverse** — walk the graph from the flagged object to everything "
+            "linked to it.\n"
+            "3. **Detect** — run typology checks (deterministic code) to spot the "
+            "fraud pattern.\n"
+            "4. **Decide** — recommend CLEAR · ESCALATE · FILE, citing the exact "
+            "object IDs.\n"
+            "5. **Govern** — the model *proposes* an action; a human approves it.\n"
+            "6. **Audit** — every query, proposal and approval is logged, immutably.")
+        st.markdown(
+            "**The tabs:** &nbsp; 🌐 **Platform** = the one-engine-many-sectors "
+            "overview · 🚨 **Alert Queue** → 🔎 **Investigation** = the AML hero "
+            "flow · ✅ **Approvals** = the human sign-off gate · 📜 **Audit** = the "
+            "immutable trail · the rest (🧾🛡🏦📈🏢) = the *same engine* on five "
+            "other sectors. Use the **sidebar** to switch between acting as an "
+            "*analyst* (proposes) or *MLRO* (approves).")
+        st.caption("Synthetic data only — decision-support, not a certified AML "
+                   "system. Runs fully on-prem with no external network calls.")
+
+    with st.expander("📖 Glossary — the jargon, in plain English", expanded=False):
+        st.markdown(
+            "- **Ontology** — a typed graph of real-world objects (accounts, claims, "
+            "companies) and the links between them; Praheri's 'digital twin'.\n"
+            "- **OAG (Ontology-Augmented Generation)** — the model retrieves "
+            "*structured objects + their links*, not text paragraphs. It's why the "
+            "ring can be reconstructed. The opposite is **RAG**, which flattens "
+            "everything to prose and loses the links.\n"
+            "- **Typology** — a known fraud pattern (e.g. *structuring*, "
+            "*staged-accident ring*, *circular ownership*).\n"
+            "- **STR (Suspicious Transaction Report)** — the regulatory filing a "
+            "bank submits to the financial-intelligence unit.\n"
+            "- **MLRO (Money Laundering Reporting Officer)** — the human who must "
+            "approve high-stakes actions (freezes, filings).\n"
+            "- **Ring / cluster** — a group of objects connected in a way that "
+            "reveals coordinated fraud (e.g. mule accounts moving money in a loop).\n"
+            "- **SIU** — Insurance Special Investigation Unit. **EWS** — Lending "
+            "Early-Warning Signals. **NPA** — Non-Performing Asset (a bad loan). "
+            "**DPD** — Days Past Due. **UBO** — Ultimate Beneficial Owner (the real "
+            "human behind layered companies).")
+
+
 def _section(label: str, accent: str) -> None:
     """Accent-themed section subheader (replaces plain `##### …`)."""
     st.markdown(
@@ -124,7 +185,12 @@ def _section(label: str, accent: str) -> None:
 
 
 def _hero_band(config, accent: str) -> None:
-    """Cohesive accent-themed sector header: icon+name, tagline, regulator chip."""
+    """Cohesive accent-themed sector header: icon+name, tagline, regulator chip, and
+    (for a cold reader) the real-world use case + a 'what you'll see here' callout."""
+    use_case_html = (
+        f"<div style='color:{_FG};font-size:0.9rem;line-height:1.55;"
+        f"margin:10px 0 12px;max-width:80ch'>{config.use_case}</div>"
+        if getattr(config, "use_case", "") else "")
     st.markdown(
         f"<div style='background:{_SURFACE};"
         f"background-image:linear-gradient(135deg,{accent}3a,transparent 72%);"
@@ -132,12 +198,21 @@ def _hero_band(config, accent: str) -> None:
         f"margin-bottom:10px'>"
         f"<div style='font-size:1.5rem;font-weight:700;color:{_FG}'>"
         f"{config.icon} {config.name}</div>"
-        f"<div style='color:{_MUTED};font-size:0.95rem;margin:4px 0 12px'>"
+        f"<div style='color:{_MUTED};font-size:0.95rem;margin:4px 0 0'>"
         f"{config.tagline}</div>"
+        f"{use_case_html}"
         f"<span style='background:{accent};color:#fff;padding:3px 12px;"
         f"border-radius:10px;font-size:0.78rem;font-weight:500'>"
         f"{config.regulator}</span>"
         f"</div>", unsafe_allow_html=True)
+    # "What you'll see here" — a quiet guide rail for a judge with no context.
+    if getattr(config, "what_you_see", ""):
+        st.markdown(
+            f"<div style='background:{accent}14;border-left:3px solid {accent};"
+            f"border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;"
+            f"color:{_FG};font-size:0.86rem;line-height:1.5'>"
+            f"<b style='color:{accent}'>👁 What you'll see here</b> · "
+            f"{config.what_you_see}</div>", unsafe_allow_html=True)
 
 
 def render_vertical(config) -> None:
@@ -217,9 +292,17 @@ def render_vertical(config) -> None:
         from praheri import governance as _gov
 
         _section("Actions", accent)
+        st.caption("The model never writes data. It *proposes* an action; a human "
+                   "approves it. High-stakes ones (🔒) wait in the MLRO approval "
+                   "queue, and every proposal + approval is written to the audit "
+                   "trail.")
         acts = st.columns(len(config.actions))
         for col, act in zip(acts, config.actions):
-            if col.button(act.label, key=f"vact_{config.key}_{act.id}"):
+            label = f"🔒 {act.label}" if act.requires_approval else act.label
+            tip = ("Routes to the MLRO approval queue — nothing executes until a "
+                   "human approves." if act.requires_approval
+                   else "Executes immediately and is recorded in the audit trail.")
+            if col.button(label, key=f"vact_{config.key}_{act.id}", help=tip):
                 actor = st.session_state.get("_actor")
                 fn = (_gov.propose_vertical_action if act.requires_approval
                       else _gov.execute_vertical_action)
@@ -240,6 +323,10 @@ def _render_procurement_actions(vstore, approve_purchase_order) -> None:
     budget = vstore.query_objects("Budget")[0]["properties"]
     remaining = budget["remaining"]
     _section("Requisitions", accent)
+    st.caption(f"Budget remaining: **₹{remaining:,.0f}**. A purchase order within "
+               "budget executes immediately; one that exceeds it is routed to the "
+               "MLRO approval queue — the same gate as an AML account freeze. Every "
+               "decision is audited.")
     for req in vstore.query_objects("Requisition"):
         p = req["properties"]
         vendor_ids = req["linked_ids"].get("from_vendor", [])
@@ -251,7 +338,9 @@ def _render_procurement_actions(vstore, approve_purchase_order) -> None:
         cols[1].write(f"`{vname}`")
         cols[2].write(f"₹{p['amount']:,.0f}")
         cols[2].caption("🔴 over budget" if over else "🟢 within budget")
-        if cols[3].button("Submit PO", key=f"po_{req['id']}"):
+        tip = ("Over budget → routes to MLRO approval." if over
+               else "Within budget → executes immediately.")
+        if cols[3].button("Submit PO", key=f"po_{req['id']}", help=tip):
             actor = st.session_state.get("_actor")
             r = approve_purchase_order(actor, requisition_id=req["id"],
                                        amount=p["amount"], budget_remaining=remaining)
@@ -328,6 +417,8 @@ st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
 st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic data; decision-support only.")
 
+_render_orientation()
+
 # Link back to the standalone explainer ("why/what" narrative). Served by the
 # tiny helper in app/serve_explainer.py (or opened directly); see HANDOFF.
 st.sidebar.markdown(
@@ -365,6 +456,10 @@ with tabs[0]:
 
 with tabs[1]:
     st.subheader("Open alerts (sorted by score)")
+    _what_you_see("The day's transaction-monitoring alerts, ranked by risk score. "
+                  "🔴 high-risk ones sit at the top — pick one and click "
+                  "**Investigate →** to send it to the Investigation tab. "
+                  "(For the demo, start with the highest-scoring alert.)")
     alerts = store.query_objects("Alert")
     alerts.sort(key=lambda a: a["properties"]["score"], reverse=True)
     if not alerts:
@@ -386,6 +481,11 @@ with tabs[1]:
 
 with tabs[2]:
     st.subheader("Investigation")
+    _what_you_see("Click **Run investigation** and watch Llama traverse the "
+                  "ontology: the fraud-ring graph lights up, the engine names the "
+                  "typology, and a draft Suspicious Transaction Report (STR) "
+                  "appears — every claim cited to a real object ID. Then propose a "
+                  "governed action below.")
     alert_id = st.session_state.get("selected_alert_id")
     if not alert_id:
         st.info("Pick an alert from the **Alert Queue** tab to investigate.")
@@ -450,18 +550,28 @@ with tabs[2]:
 
             # --- governed action buttons (full wiring in U10/U11) ---
             st.markdown("##### Actions")
+            st.caption("The model never writes data — it *proposes*; a human "
+                       "decides. **Clear**/**Escalate** are low-stakes and log "
+                       "immediately. **🔒 Propose Freeze**/**🔒 Propose STR** are "
+                       "high-stakes and wait in the MLRO approval queue. Everything "
+                       "is audited.")
             b1, b2, b3, b4 = st.columns(4)
-            if b1.button("Clear"):
+            if b1.button("Clear", help="Close the alert as not suspicious. Logged "
+                         "immediately to the audit trail."):
                 st.write(governance.clear_alert(actor, alert_id=alert_id,
                                                 rationale=inv["rationale"][:200]))
-            if b2.button("Escalate"):
+            if b2.button("Escalate", help="Open a formal case for review. Logged "
+                         "immediately to the audit trail."):
                 st.write(governance.escalate_alert_to_case(
                     actor, alert_id=alert_id, reason=inv["typology"]))
-            if b3.button("Propose Freeze"):
+            if b3.button("🔒 Propose Freeze", help="Request a freeze on the account. "
+                         "Routes to the MLRO queue — nothing happens until a human "
+                         "approves."):
                 r = governance.request_account_freeze(
                     actor, account_id=inv["account_id"], reason=inv["typology"])
                 st.warning(f"{r['status']} — see Approvals (MLRO) tab.")
-            if b4.button("Propose STR"):
+            if b4.button("🔒 Propose STR", help="File the Suspicious Transaction "
+                         "Report. Routes to the MLRO queue for human approval."):
                 r = governance.file_str(actor, case_id=alert_id,
                                         narrative=inv.get("str_narrative") or inv["rationale"])
                 st.warning(f"{r['status']} — see Approvals (MLRO) tab.")
@@ -484,6 +594,10 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("Pending approvals")
+    _what_you_see("The human gate. High-stakes actions proposed by the model wait "
+                  "here until the **MLRO** approves them — switch the sidebar role "
+                  "to *mlro* to see the Approve button. Nothing the model proposed "
+                  "has touched the data yet.")
     for item in governance.PENDING.list_pending():
         st.json(item)
         if role == "mlro" and st.button(f"Approve {item['ref']}", key=item["ref"]):
@@ -493,6 +607,10 @@ with tabs[3]:
 
 with tabs[4]:
     st.subheader("Immutable audit trail")
+    _what_you_see("Every object query, proposed action and approval — with the "
+                  "actor, timestamp and model name. This append-only log is the "
+                  "compliance artifact: it proves who did what, and that a human "
+                  "(not the model) authorized each high-stakes action.")
     rows = governance.read_audit()
     st.dataframe(rows if rows else [{"info": "no audit entries yet"}], width="stretch")
 

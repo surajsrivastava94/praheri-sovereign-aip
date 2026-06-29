@@ -59,6 +59,8 @@ class VerticalConfig(BaseModel):
     accent_color: str              # hex — drives KPI cards + ring-graph palette
     tagline: str                   # sector hero copy
     regulator: str                 # e.g. "IRDAI · DPDP Act 2023" — shown as a chip
+    use_case: str = ""             # plain-English real-world problem (for a cold reader)
+    what_you_see: str = ""         # one line: what to watch happen on this tab
 
     # ontology cartridge
     object_types: list[ObjectTypeSpec]
@@ -114,6 +116,14 @@ PROCUREMENT = register(VerticalConfig(
     accent_color="#6554C0",
     tagline="Same engine, a non-financial ontology — the platform thesis, proven.",
     regulator="Internal controls · DoA policy",
+    use_case=("Enterprises lose margin and invite collusion when staff buy "
+              "off-contract or split orders to dodge approval limits. The same "
+              "engine checks each requisition against budget and the "
+              "Delegation-of-Authority matrix — a completely different ontology, "
+              "zero engine code changed."),
+    what_you_see=("Below: open purchase requisitions. Submitting one that exceeds "
+                  "the remaining budget is routed to the MLRO approval queue — the "
+                  "exact same governance gate as an AML account freeze."),
     object_types=[
         ObjectTypeSpec(name="Requisition", icon="📝", color="#6554C0",
                        key_props=["amount", "description", "status"]),
@@ -143,6 +153,15 @@ INSURANCE_SIU = register(VerticalConfig(
     accent_color="#FF5630",
     tagline="Staged-accident rings, same graph engine as AML — different nouns.",
     regulator="IRDAI · DPDP Act 2023",
+    use_case=("A single insurance claim looks legitimate in isolation — organized "
+              "fraud only shows up in the links between claims. The engine "
+              "traverses from a suspicious claim to its garage, claimant and "
+              "policy, surfacing entities that recur across supposedly unrelated "
+              "claims. The signal is shared-node density: one workshop at the "
+              "centre of many 'accidents'."),
+    what_you_see=("Click an alert to investigate. Watch the engine light up a "
+                  "ring of claims all routed through one garage, then recommend "
+                  "referring the case to the Special Investigation Unit (SIU)."),
     object_types=[
         ObjectTypeSpec(name="Claim", icon="📄", color="#FF5630",
                        key_props=["amount", "type", "status"]),
@@ -178,6 +197,15 @@ LENDING_EWS = register(VerticalConfig(
     accent_color="#00B8D9",
     tagline="Predict NPA stress before DPD — common-director contagion + EMI bounces.",
     regulator="RBI EWS (>₹5 Cr) · Digital Lending 2022",
+    use_case=("Loans rarely go bad overnight; stress is visible months before an "
+              "account is classified a Non-Performing Asset (NPA), but the signals "
+              "sit scattered across systems. The engine traverses from a borrower "
+              "to its loans, directors and repayment history to assemble a live "
+              "risk picture — catching distress spreading through a shared-control "
+              "network before it surfaces in the books."),
+    what_you_see=("Click an alert to investigate. Watch the engine cluster "
+                  "borrowers under one common director and flag EMI-bounce stress, "
+                  "then propose a margin call or a credit-rating downgrade."),
     object_types=[
         ObjectTypeSpec(name="Borrower", icon="🏢", color="#00B8D9",
                        key_props=["name", "rating"]),
@@ -223,6 +251,15 @@ WEALTH = register(VerticalConfig(
     accent_color="#36B37E",
     tagline="SEBI suitability breaches — the audit log IS the compliance artifact.",
     regulator="SEBI IA Regs 2013 · SCORES",
+    use_case=("Advisers face incentives to push high-commission products onto "
+              "clients they don't fit, exposing the firm to regulator action and "
+              "restitution. The engine traverses from a client to their "
+              "suitability profile, sales, products and adviser, comparing what "
+              "was sold against the client's documented risk appetite — and flags "
+              "advisers who breach repeatedly across a book."),
+    what_you_see=("Click an alert to investigate. Watch the engine surface an "
+                  "adviser who sold a high-risk product to many low-risk-profile "
+                  "clients, then propose flagging the mis-selling for compliance."),
     object_types=[
         ObjectTypeSpec(name="Adviser", icon="🧑‍💼", color="#36B37E",
                        key_props=["name", "arn"]),
@@ -260,6 +297,17 @@ CORPORATE = register(VerticalConfig(
     accent_color="#998DD9",
     tagline="Unwind circular ownership to the true beneficial owner — pure OAG.",
     regulator="RBI CDD/EDD · FATF Rec 24",
+    use_case=("Regulators require knowing the real human Ultimate Beneficial "
+              "Owner (UBO) behind a corporate customer, but ownership is "
+              "deliberately obscured through layered holdings across "
+              "jurisdictions. The engine traverses the company-owns-company graph "
+              "through multiple layers to compute effective control and resolve "
+              "the true UBO — here the signal is the shape of the ownership graph "
+              "itself."),
+    what_you_see=("Click an alert to investigate. Watch the engine unwind a loop "
+                  "of companies that own each other (hiding the owner) and a "
+                  "cluster sharing one UBO, then propose escalating to Enhanced "
+                  "Due Diligence (KYC review)."),
     object_types=[
         ObjectTypeSpec(name="Company", icon="🏢", color="#998DD9",
                        key_props=["name", "jurisdiction"]),
