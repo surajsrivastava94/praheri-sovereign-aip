@@ -1,0 +1,5 @@
+{
+  "vertical": "wealth",
+  "root_id": "ADV-RING-01",
+  "narrative": "A suitability mismatch has been detected in the Wealth - Suitability & Mis-selling sector. Investigation reveals that six seemingly unrelated parties are linked to ADV-RING-01, a single Adviser ID. ALERT-WEALTH-01 and SALE-[00-04] records all bear this affiliation, suggesting an inconsistent pattern of client affiliations for the Advisor (ADV-RING-01). This corresponds with the suitability_mismatch typology, which indicates potential mis-selling activity. Given the unusual association between multiple clients and a single Advisor ID, further review is warranted to determine if any regulatory infractions have occurred."
+}

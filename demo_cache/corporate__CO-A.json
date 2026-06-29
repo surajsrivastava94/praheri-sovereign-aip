@@ -1,0 +1,5 @@
+{
+  "vertical": "corporate",
+  "root_id": "CO-A",
+  "narrative": "A suspicious circular ownership pattern has been detected in the Corporate - UBO/Ownership sector, typified as circular_ownership. Specifically, object_id CO-A is linked to object_id CO-B, which in turn is linked to object_id CO-C, which closes the loop back to CO-A (CO-A -> CO-B -> CO-C -> CO-A), indicating a circular structure with seemingly little economic substance. Furthermore, five ostensibly unrelated parties associated with object_ids CO-SHELL-00 and CO-SHELL-01 are all linked to UBO-01. This linkage to one identified Ultimate Beneficial Owner, UBO-01, is indicative of a potential \"linked-identity ring\" scenario. The presence of this circular ownership structure (CO-A) warrants escalation due to its high potential for indicating illicit or clandestine business arrangements. Therefore, I propose escalating the alert to a case for further investigation."
+}

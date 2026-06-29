@@ -28,7 +28,14 @@ data/
 # generated / runtime artifacts
 praheri.db
 audit_log.jsonl
-demo_cache/
+# demo_cache is runtime-regenerated, EXCEPT the committed golden-cache narratives
+# for the shallow verticals (U10) — demo replay artifacts checked in so a fresh
+# machine gets crash-proof vertical replay without a live model call.
+demo_cache/*
+!demo_cache/insurance_siu__GAR-RING-01.json
+!demo_cache/lending_ews__DIR-RING-01.json
+!demo_cache/wealth__ADV-RING-01.json
+!demo_cache/corporate__CO-A.json
 
 # pyvis-generated graph assets
 lib/

@@ -183,3 +183,29 @@ def test_investigation_live_when_no_cache(tmp_path, monkeypatch):
     inv = compute_vertical_investigation(cfg, store, "GAR-1")
     assert inv["source"] == "live"
     assert inv["recommendation"] == "CLEAR"
+
+
+def test_investigation_degrades_when_llama_unavailable(tmp_path, monkeypatch):
+    """No cache + a FILE-worthy signal + Llama down: must NOT raise. The graph,
+    signals, recommendation and citations still come back; narrative degrades to ''."""
+    store = GenericOntologyStore(_ring_data(5))   # at threshold -> signal fires
+    spec = SignalSpec(id="shared_attribute_ring", label="r", why="...",
+                      params={"hub_type": "Garage", "min_members": 5})
+    cfg = VerticalConfig(key="ins", name="n", icon="i", accent_color="#000",
+                         tagline="t", regulator="r",
+                         object_types=[ObjectTypeSpec(name="Claim")],
+                         link_types=["serviced_by"], signals=[spec],
+                         golden_cache_key="ins")
+    monkeypatch.setattr(vertical_engine, "CACHE_DIR", tmp_path)
+
+    def _boom(*a, **k):
+        raise agent.LlamaUnavailable("offline")
+    monkeypatch.setattr(agent, "call_llama", _boom)
+
+    inv = compute_vertical_investigation(cfg, store, "GAR-1")  # must not raise
+    assert inv["source"] == "live"
+    assert inv["recommendation"] == "FILE"
+    assert inv["narrative"] == ""
+    assert "GAR-1" in inv["cited_ids"]
+    assert "GAR-1" in inv["objects_touched"]
+    assert not (tmp_path / "ins__GAR-1.json").exists()  # no junk written on failure

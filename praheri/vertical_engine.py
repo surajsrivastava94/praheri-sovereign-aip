@@ -23,11 +23,49 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
+from praheri import agent  # for call_llama / LlamaUnavailable / SYSTEM_PROMPT
 from praheri.agent import _has_cycle  # reuse the one cycle implementation
 from praheri.vertical_store import GenericOntologyStore
 from praheri.verticals import VerticalConfig
 
 CACHE_DIR = Path("demo_cache")
+
+# Vertical STR-style narrative prompt — the generic analogue of agent.STR_PROMPT.
+# No policy RAG for the shallow verticals (policy is "n/a"); the typology + signal
+# details + cited ids carry the grounding, mirroring the AML STR draft.
+VERTICAL_NARRATIVE_PROMPT = """\
+Draft a concise investigation narrative for a compliance file in the {sector} sector.
+
+Typology: {typology}
+Detected signals: {signals}
+Matched policy clause: n/a
+Key object_ids (cite these): {cited}
+
+Write 4-6 sentences in formal regulatory tone. You MUST:
+- Describe the suspicious pattern factually.
+- Cite the specific object_ids listed above as evidence.
+- Reference the matched typology by name.
+- State why the activity warrants escalation / filing.
+Do NOT invent ids or evidence beyond those listed. Do NOT mention tool names,
+internal function names, or "not specified" placeholders. Output the narrative
+text only (no preamble)."""
+
+
+def _draft_vertical_narrative(config: VerticalConfig, store: GenericOntologyStore,
+                              signals: list[dict], cited: list[str]) -> str:
+    """[Llama] Draft a vertical narrative grounded in the fired signals + cited ids.
+    Adapts agent._draft_str_narrative; no policy lookup (shallow verticals).
+    The generic store is passed only to keep call_llama from constructing an AML
+    OntologyStore (it is inert here since tools=None)."""
+    typology = signals[0]["typology"] if signals else "n/a"
+    signal_text = "; ".join(s["detail"] for s in signals) or "n/a"
+    prompt = VERTICAL_NARRATIVE_PROMPT.format(
+        sector=config.name, typology=typology, signals=signal_text,
+        cited=", ".join(cited[:12]))
+    resp = agent.call_llama(
+        [{"role": "system", "content": agent.SYSTEM_PROMPT},
+         {"role": "user", "content": prompt}], tools=None, store=store)
+    return (resp["message"].get("content") or "").strip()
 
 
 # --------------------------------------------------------------------------- #
@@ -179,9 +217,27 @@ def compute_vertical_investigation(config: VerticalConfig,
     narrative, source = "", "live"
     cache_file = CACHE_DIR / f"{config.golden_cache_key}__{root_id}.json"
     if use_cache and cache_file.exists():
+        # Cache HIT: serve the golden narrative (honest "cached" badge).
         cached = json.loads(cache_file.read_text())
         narrative = cached.get("narrative", "")
         source = "cached"
+    elif signals:
+        # Cache MISS on a FILE case: draft the narrative LIVE via Llama, then write
+        # it back as the golden cache. Mirrors agent.investigate's cache pattern.
+        # A model failure NEVER breaks the investigation — degrade to an empty
+        # narrative so the graph + signals still render.
+        try:
+            narrative = _draft_vertical_narrative(config, store, signals, cited)
+        except agent.LlamaUnavailable:
+            narrative = ""
+        except Exception:  # any other model/parse failure: degrade gracefully
+            narrative = ""
+        if use_cache and narrative:
+            CACHE_DIR.mkdir(exist_ok=True)
+            cache_file.write_text(json.dumps(
+                {"vertical": config.key, "root_id": root_id,
+                 "narrative": narrative}, indent=2, default=str))
+    # else (no signals -> CLEAR): no narrative, no Llama call, source stays "live".
 
     return {
         "vertical": config.key,
@@ -193,3 +249,30 @@ def compute_vertical_investigation(config: VerticalConfig,
         "narrative": narrative,
         "source": source,
     }
+
+
+# The four investigation verticals + their planted-ring roots. Procurement is
+# action-centric (no fraud-ring narrative) and is intentionally excluded.
+PRIMABLE_VERTICALS: list[tuple[str, str]] = [
+    ("insurance_siu", "GAR-RING-01"),
+    ("lending_ews", "DIR-RING-01"),
+    ("wealth", "ADV-RING-01"),
+    ("corporate", "CO-A"),
+]
+
+
+def prime_caches() -> None:
+    """Draft + write the golden-cache narrative for each investigation vertical so
+    the demo replays instantly and crash-proof. Run after generate_verticals, with
+    Ollama up. Mirrors `agent.investigate(...)` cache-priming in the demo checklist."""
+    from praheri.verticals import get_config  # local import: keeps module import cheap
+    for key, root in PRIMABLE_VERTICALS:
+        cfg = get_config(key)
+        store = GenericOntologyStore(json.loads(Path(cfg.sample_data_path).read_text()))
+        inv = compute_vertical_investigation(cfg, store, root)
+        print(f"{key}: {inv['source']} | {len(inv['narrative'])} chars | "
+              f"rec={inv['recommendation']}")
+
+
+if __name__ == "__main__":  # `python -m praheri.vertical_engine` primes the caches
+    prime_caches()
