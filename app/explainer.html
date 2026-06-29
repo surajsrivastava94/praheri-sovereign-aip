@@ -189,6 +189,17 @@
   .cta-band p{color:var(--muted); max-width:54ch; margin:0 auto 28px}
   .cta-band .hero-cta{justify-content:center}
 
+  /* ---- run locally ---- */
+  .runcard{border:1px solid var(--hair); border-radius:6px; background:var(--deep); overflow:hidden}
+  .runcard-head{display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid var(--hair); background:var(--panel)}
+  .dotrow{display:flex; gap:7px} .dotrow i{width:11px;height:11px;border-radius:50%;display:block;background:var(--hair-strong)}
+  .runcard-head .rf{font-family:var(--mono); font-size:.74rem; color:var(--faint); letter-spacing:.08em; text-transform:uppercase}
+  pre.code{margin:0; padding:22px 24px; font-family:var(--mono); font-size:.88rem; line-height:1.85; color:var(--text); overflow-x:auto; white-space:pre}
+  pre.code .cm{color:var(--accent); opacity:.85}
+  .run-foot{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px}
+  .run-note{font-family:var(--mono); font-size:.8rem; color:var(--faint); letter-spacing:.02em}
+  @media(max-width:640px){ pre.code{font-size:.78rem} }
+
   footer{border-top:1px solid var(--hair); padding:40px 0 60px; color:var(--faint); font-size:.86rem}
   footer .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center}
   footer .mono{color:var(--muted)}
@@ -231,7 +242,7 @@
     </div>
     <p class="reveal" style="margin-top:14px; font-family:var(--mono); font-size:.78rem; color:var(--faint); letter-spacing:.03em">
       The console runs <b style="color:var(--muted)">on-prem</b> — by design, it never leaves your machine.
-      Clone &amp; run locally, or watch the 3-minute demo.
+      <a href="#run" style="color:var(--accent)">Run it locally →</a>
     </p>
     <div class="badges reveal">
       <span class="badge"><span class="dot" style="background:var(--ok)"></span> Zero external egress</span>
@@ -514,12 +525,49 @@ flagged last year…"
       <p>The live console runs the full loop: triage an alert, traverse the ontology, expose the fraud ring, draft the report, propose a freeze, approve it as the MLRO, and read the audit trail — all on-prem, with no network egress.</p>
       <div class="hero-cta">
         <a class="btn btn-solid" href="https://github.com/surajsrivastava94/praheri-sovereign-aip" target="_blank" rel="noopener" id="launch-cta">View source on GitHub →</a>
-        <a class="btn" href="http://localhost:8501">Run console locally (localhost:8501)</a>
+        <a class="btn" href="#run">Run it locally →</a>
       </div>
       <p style="margin-top:18px; font-family:var(--mono); font-size:.78rem; color:var(--faint); letter-spacing:.03em">
         Sovereign by design — the console can't be hosted on a public cloud without breaking the premise.
-        Run it on your own machine: <span style="color:var(--muted)">streamlit run app/streamlit_app.py</span>
+        It runs on your own machine, with no network egress.
       </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RUN LOCALLY ============ -->
+<section id="run" style="padding-top:30px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Run it yourself</span>
+      <h2>Five commands. Your machine. Zero egress.</h2>
+      <p>The console is open source and runs entirely on-prem on open-weight Llama via Ollama. Clone it, point it at a local model, and the full investigation loop runs with no network calls.</p>
+    </div>
+    <div class="runcard reveal">
+      <div class="runcard-head"><span class="dotrow"><i></i><i></i><i></i></span><span class="rf">terminal</span></div>
+      <pre class="code"><span class="cm"># 1 · clone the repo</span>
+git clone https://github.com/surajsrivastava94/praheri-sovereign-aip.git
+cd praheri-sovereign-aip
+
+<span class="cm"># 2 · python env + dependencies (Python 3.11+)</span>
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+
+<span class="cm"># 3 · pull the open-weight models, then serve them locally</span>
+ollama pull llama3.1:8b
+ollama pull nomic-embed-text
+ollama serve
+
+<span class="cm"># 4 · generate the synthetic bank + planted fraud rings</span>
+python -m praheri.generate
+python -m praheri.generate_verticals
+
+<span class="cm"># 5 · launch the console  →  http://localhost:8501</span>
+streamlit run app/streamlit_app.py</pre>
+    </div>
+    <div class="run-foot reveal">
+      <span class="run-note">No GPU required for the 8B demo model · synthetic data only · nothing leaves your box.</span>
+      <a class="btn" href="mailto:emails2suraj@gmail.com?subject=Praheri%20%E2%80%94%20access%20%26%20walkthrough&amp;body=Hi%20Suraj%2C%0A%0AI%27d%20like%20to%20see%20Praheri%20run%20%2F%20get%20help%20setting%20it%20up.%0A%0A">Need a hand? Email me →</a>
     </div>
   </div>
 </section>
