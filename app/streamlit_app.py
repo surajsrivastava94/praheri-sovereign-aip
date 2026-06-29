@@ -201,26 +201,27 @@ def _render_demo_guide(step: dict, idx: int, total: int) -> None:
     'say' line. A ✓ appears when the beat's pure-read predicate is satisfied."""
     accent = _PLATFORM_ACCENT
     done = bool(step["done"] and step["done"](st.session_state))
-    pill = (f"<span style='background:{accent};color:#04101f;font-weight:700;"
-            f"font-size:0.72rem;letter-spacing:0.04em;padding:3px 10px;"
-            f"border-radius:10px;white-space:nowrap'>STEP {idx + 1} / {total}</span>")
-    check = (f"<span style='color:{_STATUS_COLOR['CLEAR']};font-weight:600;"
-             f"font-size:0.8rem;margin-left:8px'>✓ done — click Next ▶</span>"
+    # mono eyebrow (quiet, tracked) instead of a loud solid-fill pill
+    pill = (f"<span style='background:{accent}1f;color:{accent};font-weight:600;"
+            f"font-size:0.66rem;letter-spacing:0.14em;text-transform:uppercase;"
+            f"font-family:\"IBM Plex Mono\",monospace;padding:2px 8px;"
+            f"border-radius:6px;white-space:nowrap'>Step {idx + 1} / {total}</span>")
+    check = (f"<span style='color:{_STATUS_COLOR['CLEAR']};font-weight:500;"
+             f"font-size:0.74rem;margin-left:8px'>✓ done — Next ▶</span>"
              if done else "")
     st.markdown(
-        f"<div style='background:{_SURFACE};"
-        f"background-image:linear-gradient(135deg,{accent}26,transparent 70%);"
-        f"border:1px solid {accent}66;border-radius:12px;padding:12px 16px;"
-        f"margin-bottom:14px'>"
-        f"<div style='display:flex;align-items:center;gap:10px;margin-bottom:6px'>"
+        f"<div class='praheri-demo-banner' style='background:{_SURFACE};"
+        f"border:1px solid {accent}33;border-left:2px solid {accent};"
+        f"border-radius:10px;padding:10px 14px;margin-bottom:12px'>"
+        f"<div style='display:flex;align-items:center;gap:9px;margin-bottom:5px'>"
         f"{pill}"
-        f"<span style='color:{_FG};font-weight:700;font-size:0.98rem'>"
-        f"🎬 {step['title']}</span>{check}</div>"
-        f"<div style='color:{_FG};font-size:0.9rem;line-height:1.5'>"
+        f"<span style='color:{_FG};font-weight:600;font-size:0.9rem'>"
+        f"{step['title']}</span>{check}</div>"
+        f"<div style='color:{_FG};font-size:0.82rem;line-height:1.5'>"
         f"<b style='color:{accent}'>Go to</b> the <b>{step['tab']}</b> tab · "
         f"{step['action']}</div>"
-        f"<div style='color:{_MUTED};font-size:0.82rem;line-height:1.5;"
-        f"margin-top:6px;font-style:italic'>🗣 “{step['say']}”</div>"
+        f"<div style='color:{_MUTED};font-size:0.76rem;line-height:1.5;"
+        f"margin-top:5px;font-style:italic'>🗣 “{step['say']}”</div>"
         f"</div>", unsafe_allow_html=True)
 
 
@@ -513,6 +514,20 @@ def render_platform() -> None:
 
 
 st.set_page_config(page_title="Praheri — Sovereign AIP", layout="wide")
+
+# Global polish (Stage 2). Scoped to headings + the demo-banner animation only —
+# no div/color rules, so it can't bleed into the inline-styled cards (their inline
+# styles out-specify tag selectors). Fonts themselves come from config.toml
+# [[theme.fontFaces]] (bundled locally; no network). Tracking mirrors the explainer.
+st.markdown(
+    "<style>"
+    "h1,h2,h3{letter-spacing:-0.02em;font-weight:700}"
+    "h1{letter-spacing:-0.03em}"
+    "@keyframes praheriBannerIn{from{opacity:0;transform:translateY(6px)}"
+    "to{opacity:1;transform:translateY(0)}}"
+    ".praheri-demo-banner{animation:praheriBannerIn .42s cubic-bezier(.19,1,.22,1)}"
+    "</style>", unsafe_allow_html=True)
+
 st.title("🛡️ Praheri — Sovereign Financial-Crime Copilot")
 st.caption("Llama · on-prem · ontology + governed actions + audit. Synthetic data; decision-support only.")
 
@@ -528,8 +543,19 @@ st.sidebar.markdown(
     "📖 What is Praheri? — open explainer</a>",
     unsafe_allow_html=True)
 
-# Demo persona toggle (analyst proposes, MLRO approves).
-role = st.sidebar.radio("Acting as", ["analyst", "mlro"])
+# Demo persona control — the two-person governance model made legible. The
+# segmented control's *values* stay "analyst"/"mlro" (engine + the role=="mlro"
+# check downstream depend on them); only the labels are prettied.
+st.sidebar.markdown("**Acting as**")
+role = st.sidebar.segmented_control(
+    "Acting as", options=["analyst", "mlro"],
+    format_func=lambda v: {"analyst": "🔍 Analyst", "mlro": "✅ MLRO"}[v],
+    default="analyst", label_visibility="collapsed")
+if role is None:
+    role = "analyst"
+st.sidebar.caption("Two-person rule: the **Analyst** *proposes* an action; the "
+                   "**MLRO** *approves* it. Nothing the model proposes touches "
+                   "data until the MLRO signs off.")
 actor = Actor(id=f"demo_{role}", role=role)
 st.session_state["_actor"] = actor  # so render_vertical's actions can reach it
 oag_mode = st.sidebar.toggle("OAG mode (structured objects)", value=True,

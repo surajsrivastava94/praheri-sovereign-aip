@@ -4,13 +4,36 @@ gatherUsageStats = false
 
 [server]
 headless = true
+enableStaticServing = true   # serves app/static/ at /app/static/ (local fonts, no egress)
 
 # Palantir-dark operational theme — matches the standalone explainer page so the
-# explainer and the live console read as one product.
+# explainer and the live console read as one product. Fonts are bundled locally
+# under app/static/ (Inter is a variable font; IBM Plex Mono is static) so the
+# console stays airplane-mode clean — no Google Fonts / runtime network calls.
 [theme]
 base = "dark"
 primaryColor = "#4C9AFF"
 backgroundColor = "#0A0E1A"
 secondaryBackgroundColor = "#0F172A"
 textColor = "#E8EDF5"
-font = "sans serif"
+font = "Inter"
+headingFont = "Inter"
+codeFont = "IBM Plex Mono"
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/inter.woff2"
+weight = "100 900"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/ibmplexmono-400.woff2"
+weight = "400"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "IBM Plex Mono"
+url = "app/static/ibmplexmono-500.woff2"
+weight = "500"
+style = "normal"
