@@ -98,6 +98,76 @@ _MUTED = "#94A3B8"          # muted label text
 _PLATFORM_ACCENT = "#4C9AFF"  # brand accent for the multi-vertical Platform view
 _STATUS_COLOR = {"FILE": "#FF5630", "ESCALATE": "#FFAB00", "CLEAR": "#36B37E"}
 
+# --------------------------------------------------------------------------- #
+# Guided Demo mode (Stage 1). The canonical 3-min flow as a stepper. The banner #
+# above the tab bar names the tab to click + the action + the narration line;   #
+# `done` is a pure-read predicate that marks a beat ✓ (it never auto-advances —  #
+# Next/Back is the only advancer, so the 4 narration-only beats work too). Copy  #
+# is lifted from docs/demo_script.md so on-screen guide & spoken script can't    #
+# drift. Streamlit can't switch tabs programmatically, so the banner *tells* the #
+# judge which tab to open (same idiom as the Platform 'Open →' jump).            #
+# --------------------------------------------------------------------------- #
+_DEMO_STEPS = [
+    {"n": 1, "title": "Hook — the sovereign OS", "tab": "🌐 Platform",
+     "action": "Point at the live counters + the cartridge tiles.",
+     "say": "An Indian bank cannot legally send this data to OpenAI — RBI forbids "
+            "it. So we built the alternative on-prem on Llama. And it's not one "
+            "app — it's an OS: one engine, six ontologies, zero lines of engine "
+            "code changed per sector. Here's the flagship: financial crime.",
+     "done": None},
+    {"n": 2, "title": "Pick the hottest alert", "tab": "🚨 Alert Queue",
+     "action": "Click  Investigate →  on  ALERT-R001  (top row).",
+     "say": "Open AML alerts, ranked by risk. Let's take the hottest — a funnel "
+            "account.",
+     "done": lambda s: s.get("selected_alert_id") == "ALERT-R001"},
+    {"n": 3, "title": "Investigate → traverse", "tab": "🔎 Investigation",
+     "action": "Click  🔎 Run investigation.",
+     "say": "Llama is traversing the bank's ontology — accounts, transactions, "
+            "devices — as structured objects. This is Ontology-Augmented "
+            "Generation, not a chatbot guessing from text.",
+     "done": lambda s: (s.get("investigation") or {}).get("alert_id") == "ALERT-R001"},
+    {"n": 4, "title": "The ring lights up", "tab": "🔎 Investigation",
+     "action": "Point at the lit-up fraud ring (mules → beneficiary).",
+     "say": "There's the ring: mule accounts each fed sub-₹50,000 deposits to dodge "
+            "reporting, all funnelling to one beneficiary. The engine detected the "
+            "structuring pattern deterministically — the model explains it.",
+     "done": lambda s: (s.get("investigation") or {}).get("alert_id") == "ALERT-R001"},
+    {"n": 5, "title": "STR narrative + signals", "tab": "🔎 Investigation",
+     "action": "Scroll to the 🚦 signals + draft STR narrative; point at the cited IDs.",
+     "say": "It drafts a Suspicious Transaction Report, citing the actual account "
+            "and transaction IDs as evidence, grounded in the bank's own AML "
+            "policy. Recommendation: FILE.",
+     "done": lambda s: bool((s.get("investigation") or {}).get("str_narrative"))},
+    {"n": 6, "title": "Governance — propose, approve, audit", "tab": "✅ Approvals (MLRO)",
+     "action": "On Investigation: 🔒 Propose Freeze. Switch sidebar role to mlro, "
+               "approve here, then check 📜 Audit Trail.",
+     "say": "The AI cannot act on its own. It proposes a freeze — which lands in "
+            "the MLRO's queue. The officer approves, and every step is written to "
+            "an immutable audit log: who, what, when, which model. Copilot, not "
+            "autopilot.",
+     "done": None},
+    {"n": 7, "title": "Sovereignty", "tab": "🛡️ (sidebar) Verify sovereignty",
+     "action": "Open the 🛡️ Verify sovereignty expander in the sidebar. "
+               "(Optional: pull Wi-Fi and re-run.)",
+     "say": "The system audits its own network calls. Zero external egress — the "
+            "only connection is to the Llama model on this box. Pull the cable and "
+            "it still works. The only RBI-compliant architecture.",
+     "done": None},
+    {"n": 8, "title": "Swap the sector — same engine", "tab": "🏢 Corporate",
+     "action": "Open 🏢 Corporate, click Investigate, then 🔎 Run investigation.",
+     "say": "Now the OS thesis. Same engine, same cockpit — a completely different "
+            "sector. Corporate ownership: it unwinds a circular shell structure to "
+            "the hidden beneficial owner. Zero engine code changed — Insurance, "
+            "Lending, Wealth all run off the same loop.",
+     "done": lambda s: bool(s.get("vinv_corporate"))},
+    {"n": 9, "title": "Reusable governance", "tab": "🧾 Procurement",
+     "action": "Open 🧾 Procurement, submit the over-budget PO.",
+     "say": "The governance layer is reusable too — this over-budget purchase order "
+            "hits the exact same approval gate. One platform, every Reliance "
+            "workflow. India shouldn't rent its intelligence — it should own it.",
+     "done": None},
+]
+
 
 def _kpi_card_html(label: str, value: str, delta: str | None, accent: str) -> str:
     """One accent-bordered bento KPI card as a self-contained HTML string."""
@@ -123,6 +193,35 @@ def _what_you_see(text: str, accent: str = _PLATFORM_ACCENT) -> None:
         f"color:{_FG};font-size:0.86rem;line-height:1.5'>"
         f"<b style='color:{accent}'>👁 What you'll see here</b> · {text}</div>",
         unsafe_allow_html=True)
+
+
+def _render_demo_guide(step: dict, idx: int, total: int) -> None:
+    """The persistent guided-demo banner (above the tab bar, so it survives tab
+    clicks). Shows the step pill, the tab to open, the action, and the narration
+    'say' line. A ✓ appears when the beat's pure-read predicate is satisfied."""
+    accent = _PLATFORM_ACCENT
+    done = bool(step["done"] and step["done"](st.session_state))
+    pill = (f"<span style='background:{accent};color:#04101f;font-weight:700;"
+            f"font-size:0.72rem;letter-spacing:0.04em;padding:3px 10px;"
+            f"border-radius:10px;white-space:nowrap'>STEP {idx + 1} / {total}</span>")
+    check = (f"<span style='color:{_STATUS_COLOR['CLEAR']};font-weight:600;"
+             f"font-size:0.8rem;margin-left:8px'>✓ done — click Next ▶</span>"
+             if done else "")
+    st.markdown(
+        f"<div style='background:{_SURFACE};"
+        f"background-image:linear-gradient(135deg,{accent}26,transparent 70%);"
+        f"border:1px solid {accent}66;border-radius:12px;padding:12px 16px;"
+        f"margin-bottom:14px'>"
+        f"<div style='display:flex;align-items:center;gap:10px;margin-bottom:6px'>"
+        f"{pill}"
+        f"<span style='color:{_FG};font-weight:700;font-size:0.98rem'>"
+        f"🎬 {step['title']}</span>{check}</div>"
+        f"<div style='color:{_FG};font-size:0.9rem;line-height:1.5'>"
+        f"<b style='color:{accent}'>Go to</b> the <b>{step['tab']}</b> tab · "
+        f"{step['action']}</div>"
+        f"<div style='color:{_MUTED};font-size:0.82rem;line-height:1.5;"
+        f"margin-top:6px;font-style:italic'>🗣 “{step['say']}”</div>"
+        f"</div>", unsafe_allow_html=True)
 
 
 def _render_orientation() -> None:
@@ -435,6 +534,30 @@ actor = Actor(id=f"demo_{role}", role=role)
 st.session_state["_actor"] = actor  # so render_vertical's actions can reach it
 oag_mode = st.sidebar.toggle("OAG mode (structured objects)", value=True,
                              help="Off = naive RAG over flattened text, for the side-by-side.")
+
+# Guided Demo control (Stage 1). ON by default so a context-free judge can
+# self-navigate; a presenter flips it off for the uncluttered view. Next/Back
+# move the step; the banner (rendered above the tab bar) shows the instruction.
+demo_on = st.sidebar.toggle("🎬 Guided demo", value=True,
+                            help="A step-by-step walkthrough of the 3-min demo. "
+                                 "Off = clean console.")
+if demo_on:
+    st.session_state.setdefault("demo_step", 0)
+    _total = len(_DEMO_STEPS)
+    _i = min(st.session_state["demo_step"], _total - 1)
+    st.sidebar.caption(f"Step {_i + 1} of {_total} · {_DEMO_STEPS[_i]['title']}")
+    _b, _n, _r = st.sidebar.columns(3)
+    if _b.button("◀ Back", use_container_width=True, disabled=_i == 0):
+        st.session_state["demo_step"] = max(0, _i - 1)
+        st.rerun()
+    if _n.button("Next ▶", use_container_width=True, disabled=_i >= _total - 1,
+                 type="primary"):
+        st.session_state["demo_step"] = min(_total - 1, _i + 1)
+        st.rerun()
+    if _r.button("↺", use_container_width=True, help="Restart the walkthrough"):
+        st.session_state["demo_step"] = 0
+        st.rerun()
+
 st.sidebar.info("Sovereignty demo: this runs with no external network calls. "
                 "Try airplane mode during the pitch.")
 with st.sidebar.expander("🛡️ Verify sovereignty"):
@@ -445,6 +568,12 @@ with st.sidebar.expander("🛡️ Verify sovereignty"):
     else:
         st.error(f"External egress: {rep['external_endpoints']}")
     st.caption("Local only: " + ", ".join(rep["local_endpoints"]))
+
+# Guided-demo banner — above the tab bar so it persists across every tab click.
+# Renders nothing when the toggle is off, leaving the hero flow unchanged.
+if demo_on:
+    _i = min(st.session_state.get("demo_step", 0), len(_DEMO_STEPS) - 1)
+    _render_demo_guide(_DEMO_STEPS[_i], _i, len(_DEMO_STEPS))
 
 tabs = st.tabs(["🌐 Platform", "🚨 Alert Queue", "🔎 Investigation",
                 "✅ Approvals (MLRO)", "📜 Audit Trail", "🧾 Procurement",
@@ -458,7 +587,7 @@ with tabs[1]:
     st.subheader("Open alerts (sorted by score)")
     _what_you_see("The day's transaction-monitoring alerts, ranked by risk score. "
                   "🔴 high-risk ones sit at the top — pick one and click "
-                  "**Investigate →** to send it to the Investigation tab. "
+                  "<b>Investigate →</b> to send it to the Investigation tab. "
                   "(For the demo, start with the highest-scoring alert.)")
     alerts = store.query_objects("Alert")
     alerts.sort(key=lambda a: a["properties"]["score"], reverse=True)
@@ -481,7 +610,7 @@ with tabs[1]:
 
 with tabs[2]:
     st.subheader("Investigation")
-    _what_you_see("Click **Run investigation** and watch Llama traverse the "
+    _what_you_see("Click <b>Run investigation</b> and watch Llama traverse the "
                   "ontology: the fraud-ring graph lights up, the engine names the "
                   "typology, and a draft Suspicious Transaction Report (STR) "
                   "appears — every claim cited to a real object ID. Then propose a "
@@ -595,9 +724,9 @@ with tabs[2]:
 with tabs[3]:
     st.subheader("Pending approvals")
     _what_you_see("The human gate. High-stakes actions proposed by the model wait "
-                  "here until the **MLRO** approves them — switch the sidebar role "
-                  "to *mlro* to see the Approve button. Nothing the model proposed "
-                  "has touched the data yet.")
+                  "here until the <b>MLRO</b> approves them — switch the sidebar "
+                  "role to <i>mlro</i> to see the Approve button. Nothing the model "
+                  "proposed has touched the data yet.")
     for item in governance.PENDING.list_pending():
         st.json(item)
         if role == "mlro" and st.button(f"Approve {item['ref']}", key=item["ref"]):
