@@ -126,7 +126,8 @@ def _section(label: str, accent: str) -> None:
 def _hero_band(config, accent: str) -> None:
     """Cohesive accent-themed sector header: icon+name, tagline, regulator chip."""
     st.markdown(
-        f"<div style='background:linear-gradient(135deg,{accent}22,{_SURFACE});"
+        f"<div style='background:{_SURFACE};"
+        f"background-image:linear-gradient(135deg,{accent}3a,transparent 72%);"
         f"border:1px solid {accent}55;border-radius:14px;padding:18px 22px;"
         f"margin-bottom:10px'>"
         f"<div style='font-size:1.5rem;font-weight:700;color:{_FG}'>"
@@ -272,7 +273,8 @@ def render_platform() -> None:
     # center engine box — the pipeline that is identical across every vertical
     st.markdown("### One sovereign engine. Every sector is a cartridge.")
     st.markdown(
-        f"<div style='background:linear-gradient(135deg,{accent}26,{_SURFACE});"
+        f"<div style='background:{_SURFACE};"
+        f"background-image:linear-gradient(135deg,{accent}40,transparent 72%);"
         f"border:1px solid {accent}66;border-radius:14px;padding:22px 24px;"
         f"text-align:center'>"
         f"<div style='font-size:1.2rem;font-weight:700;color:{_FG}'>"
