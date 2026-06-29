@@ -44,3 +44,6 @@ lib/
 
 # reference-only material (Build Bible source, original starter zip) — not the codebase
 Cowork-Brainstorm/
+
+# Netlify deploy staging (built from app/explainer.html)
+.deploy/

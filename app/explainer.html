@@ -229,6 +229,10 @@
       <a class="btn btn-solid" href="http://localhost:8501" id="launch-hero">Launch the console →</a>
       <a class="btn" href="#ontology">What is the ontology?</a>
     </div>
+    <p class="reveal" style="margin-top:14px; font-family:var(--mono); font-size:.78rem; color:var(--faint); letter-spacing:.03em">
+      The console runs <b style="color:var(--muted)">on-prem</b> — by design, it never leaves your machine.
+      Clone &amp; run locally, or watch the 3-minute demo.
+    </p>
     <div class="badges reveal">
       <span class="badge"><span class="dot" style="background:var(--ok)"></span> Zero external egress</span>
       <span class="badge"><span class="dot" style="background:var(--accent)"></span> 6 sectors · 1 engine</span>
@@ -509,9 +513,13 @@ flagged last year…"
       <h2 style="margin-top:14px">Pick an alert. Watch the ring light up.</h2>
       <p>The live console runs the full loop: triage an alert, traverse the ontology, expose the fraud ring, draft the report, propose a freeze, approve it as the MLRO, and read the audit trail — all on-prem, with no network egress.</p>
       <div class="hero-cta">
-        <a class="btn btn-solid" href="http://localhost:8501" id="launch-cta">Launch the console →</a>
-        <a class="btn" href="#top">Back to top</a>
+        <a class="btn btn-solid" href="https://github.com/surajsrivastava94/praheri-sovereign-aip" target="_blank" rel="noopener" id="launch-cta">View source on GitHub →</a>
+        <a class="btn" href="http://localhost:8501">Run console locally (localhost:8501)</a>
       </div>
+      <p style="margin-top:18px; font-family:var(--mono); font-size:.78rem; color:var(--faint); letter-spacing:.03em">
+        Sovereign by design — the console can't be hosted on a public cloud without breaking the premise.
+        Run it on your own machine: <span style="color:var(--muted)">streamlit run app/streamlit_app.py</span>
+      </p>
     </div>
   </div>
 </section>
