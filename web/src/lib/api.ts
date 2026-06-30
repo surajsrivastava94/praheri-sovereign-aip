@@ -7,6 +7,20 @@ export async function getJSON<T>(path: string): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+export async function postJSON<T>(path: string, body: unknown): Promise<T> {
+  const r = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    // surface the FastAPI {detail} message when present
+    const detail = await r.json().catch(() => null);
+    throw new Error(detail?.detail ?? `${path} → ${r.status}`);
+  }
+  return r.json() as Promise<T>;
+}
+
 export type GraphNode = { id: string; kind: string; label: string; highlight: boolean };
 export type GraphEdge = {
   source: string;
@@ -51,3 +65,26 @@ export type OntologyObject = {
 };
 
 export type RagAnswer = { answer: string; mode: string };
+
+export type PendingItem = {
+  ref: string;
+  action: string;
+  params: Record<string, unknown>;
+  proposed_by: string;
+  ts: string;
+  status: string;
+};
+
+export type AuditRow = {
+  id: string;
+  ts: string;
+  event: string;
+  actor: string;
+  role: string;
+  action: string;
+  params: Record<string, unknown>;
+  result: unknown;
+  model: string;
+};
+
+export type ActionResult = { status: string; ref?: string; result?: unknown };

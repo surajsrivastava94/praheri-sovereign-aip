@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { RoleToggle } from "@/components/RoleToggle";
 
 // Phase 0 shell: AML hero pinned, sectors as a static list (wired to the
 // /api/verticals registry in a later phase), Platform overview. Clicking a
@@ -9,6 +10,8 @@ import { usePathname } from "next/navigation";
 // flat 10-tab Streamlit layout.
 const NAV = [
   { href: "/aml", icon: "🛡️", label: "AML", sub: "Anti-Money-Laundering", hero: true },
+  { href: "/approvals", icon: "✅", label: "Approvals", sub: "MLRO sign-off gate" },
+  { href: "/audit", icon: "📜", label: "Audit", sub: "Immutable trail" },
   { href: "/sectors/insurance_siu", icon: "🚑", label: "Insurance SIU", sub: "Claims fraud" },
   { href: "/sectors/lending_ews", icon: "🏦", label: "Lending EWS", sub: "Early warning" },
   { href: "/sectors/wealth", icon: "📈", label: "Wealth", sub: "Suitability" },
@@ -56,7 +59,10 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="px-5 py-4 border-t border-hairline text-[0.7rem] text-muted">
+      <div className="px-4 py-3 border-t border-hairline">
+        <RoleToggle />
+      </div>
+      <div className="px-5 py-3 border-t border-hairline text-[0.7rem] text-muted">
         Llama · on-prem · zero egress
       </div>
     </aside>

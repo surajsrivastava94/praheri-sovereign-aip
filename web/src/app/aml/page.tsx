@@ -11,6 +11,7 @@ import { WhyTrail } from "@/components/WhyTrail";
 import { StrPanel } from "@/components/StrPanel";
 import { ObjectInspector } from "@/components/ObjectInspector";
 import { OagRagPanel } from "@/components/OagRagPanel";
+import { ActionBar } from "@/components/ActionBar";
 
 export default function AmlPage() {
   const [alertId, setAlertId] = useState("ALERT-R001");
@@ -97,6 +98,14 @@ export default function AmlPage() {
           Why this recommendation
         </h2>
         {inv.data && <WhyTrail inv={inv.data} />}
+      </section>
+
+      {/* governed actions — propose; a human disposes */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-fg mb-3 border-l-2 border-accent pl-2.5">
+          Governed actions
+        </h2>
+        {inv.data && <ActionBar inv={inv.data} />}
       </section>
 
       {/* suspicious transaction report — cached-first, live-stream opt-in */}
