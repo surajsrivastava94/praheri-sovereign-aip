@@ -199,6 +199,13 @@ def vertical_alerts(key: str) -> list[dict[str, Any]]:
     return _vstore(key).query_objects("Alert")
 
 
+@app.get("/api/verticals/{key}/objects")
+def vertical_objects(key: str, type: str) -> list[dict[str, Any]]:
+    """Objects of a given type — used by the procurement workspace (Requisition /
+    Budget), which is action-centric rather than alert/ring-centric."""
+    return _vstore(key).query_objects(type)
+
+
 @app.get("/api/verticals/{key}/investigate")
 def vertical_investigate(key: str, root_id: str) -> dict[str, Any]:
     return vertical_engine.compute_vertical_investigation(

@@ -88,3 +88,50 @@ export type AuditRow = {
 };
 
 export type ActionResult = { status: string; ref?: string; result?: unknown };
+
+// --- verticals / platform (P4) ---
+export type KPI = { label: string; value: string; delta?: string | null };
+export type SignalSpec = { id: string; label: string; why: string };
+export type ActionSpec = { id: string; label: string; requires_approval: boolean };
+
+export type VerticalConfig = {
+  key: string;
+  name: string;
+  icon: string;
+  accent_color: string;
+  tagline: string;
+  regulator: string;
+  use_case: string;
+  what_you_see: string;
+  link_types: string[];
+  kpi_cards: KPI[];
+  signals: SignalSpec[];
+  actions: ActionSpec[];
+};
+
+export type PlatformCounters = {
+  ontologies: number;
+  object_types: number;
+  link_types: number;
+  actions: number;
+};
+
+export type VerticalsResponse = { verticals: VerticalConfig[]; counters: PlatformCounters };
+
+export type VerticalAlert = {
+  id: string;
+  properties: Record<string, unknown>;
+  linked_ids: Record<string, string[]>;
+};
+
+// compute_vertical_investigation() output — note `narrative` (not str_narrative).
+export type VerticalInvestigation = {
+  vertical: string;
+  root_id: string;
+  objects_touched: string[];
+  signals: Signal[];
+  recommendation: Recommendation;
+  cited_ids: string[];
+  narrative: string;
+  source: "live" | "cached";
+};
