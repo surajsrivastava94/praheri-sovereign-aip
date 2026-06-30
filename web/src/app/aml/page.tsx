@@ -12,6 +12,8 @@ import { StrPanel } from "@/components/StrPanel";
 import { ObjectInspector } from "@/components/ObjectInspector";
 import { OagRagPanel } from "@/components/OagRagPanel";
 import { ActionBar } from "@/components/ActionBar";
+import { ConfidenceMeter } from "@/components/ConfidenceMeter";
+import { EvidenceTimeline } from "@/components/EvidenceTimeline";
 
 export default function AmlPage() {
   const [alertId, setAlertId] = useState("ALERT-R001");
@@ -64,6 +66,11 @@ export default function AmlPage() {
             <SourceBadge source={inv.data.source} />
           </div>
         )}
+        {inv.data && (
+          <div className="mt-4 max-w-md">
+            <ConfidenceMeter alertId={alertId} />
+          </div>
+        )}
       </section>
 
       {/* fraud-ring graph */}
@@ -98,6 +105,14 @@ export default function AmlPage() {
           Why this recommendation
         </h2>
         {inv.data && <WhyTrail inv={inv.data} />}
+      </section>
+
+      {/* evidence timeline — money movement over time */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-fg mb-3 border-l-2 border-accent pl-2.5">
+          Evidence timeline
+        </h2>
+        {inv.data && <EvidenceTimeline alertId={alertId} />}
       </section>
 
       {/* governed actions — propose; a human disposes */}

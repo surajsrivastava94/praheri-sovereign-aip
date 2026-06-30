@@ -118,6 +118,21 @@ export type PlatformCounters = {
 
 export type VerticalsResponse = { verticals: VerticalConfig[]; counters: PlatformCounters };
 
+// --- confidence + evidence timeline (P5) ---
+export type Confidence = { score: number; band: "High" | "Medium" | "Low"; reasons: string[] };
+
+export type TimelineRow = {
+  txn_id: string;
+  from_account: string;
+  to_account: string;
+  amount: number;
+  currency: string;
+  channel: string;
+  timestamp: string;
+  sub_threshold: boolean;
+};
+export type Timeline = { rows: TimelineRow[]; total: number };
+
 export type VerticalAlert = {
   id: string;
   properties: Record<string, unknown>;

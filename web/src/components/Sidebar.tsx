@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RoleToggle } from "@/components/RoleToggle";
+import { DemoToggle } from "@/components/DemoToggle";
 import { useVerticals } from "@/lib/useVerticals";
 
 type NavItem = { href: string; icon: string; label: string; sub: string; hero?: boolean };
@@ -76,6 +77,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="px-4 py-3 border-t border-hairline">
+        <DemoToggle />
+      </div>
       <div className="px-4 py-3 border-t border-hairline">
         <RoleToggle />
       </div>
