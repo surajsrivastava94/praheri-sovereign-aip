@@ -121,3 +121,55 @@ def test_build_str_messages_grounded_in_structured_objects():
 def test_str_stream_unknown_alert_404():
     r = client.get("/api/alerts/NOPE/str/stream")
     assert r.status_code == 404
+
+
+# --- P3: governance loop (offline — pure governance + SQLite, no Ollama) ---
+# These mutate process-global state (PENDING, audit log, praheri.db). Assert on
+# status strings + append-only audit so the suite stays re-runnable.
+
+def test_low_stakes_action_executes_immediately():
+    r = client.post("/api/actions/clear_alert",
+                    json={"role": "analyst",
+                          "params": {"alert_id": "ALERT-R001", "rationale": "test"}})
+    assert r.status_code == 200
+    assert r.json()["status"] == "EXECUTED"
+
+
+def test_unknown_action_404():
+    r = client.post("/api/actions/nonesuch", json={"role": "analyst", "params": {}})
+    assert r.status_code == 404
+
+
+def test_high_stakes_propose_then_approve_flow():
+    # propose (analyst) -> PENDING_APPROVAL
+    r = client.post("/api/actions/request_account_freeze",
+                    json={"role": "analyst",
+                          "params": {"account_id": "ACC-MULE-07", "reason": "test"}})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "PENDING_APPROVAL"
+    ref = body["ref"]
+
+    # it shows up in the queue
+    pending = client.get("/api/approvals").json()
+    assert any(p["ref"] == ref and p["action"] == "request_account_freeze"
+               for p in pending)
+
+    # MLRO approves -> EXECUTED, leaves the queue
+    a = client.post(f"/api/approvals/{ref}/approve", json={"role": "mlro"})
+    assert a.status_code == 200
+    assert a.json()["status"] == "EXECUTED"
+    assert not any(p["ref"] == ref for p in client.get("/api/approvals").json())
+
+
+def test_approve_unknown_ref_404():
+    r = client.post("/api/approvals/BADREF/approve", json={"role": "mlro"})
+    assert r.status_code == 404
+
+
+def test_audit_log_records_actions():
+    # an action was run above; the audit trail is non-empty with the right shape
+    rows = client.get("/api/audit").json()
+    assert isinstance(rows, list) and rows
+    for key in ("actor", "role", "action", "event", "model"):
+        assert key in rows[-1]

@@ -16,9 +16,11 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 
-from praheri import agent
+from praheri import agent, governance
 from praheri.agent import LlamaUnavailable
+from praheri.governance import Actor
 from praheri.store import OntologyStore, _type_of
+from server.models import ActionRequest, ApproveRequest
 from server.serialize import graph_json
 from server.str_prompt import build_str_messages
 from server.stream import stream_chat
@@ -113,6 +115,55 @@ def ask_stream(q: str) -> StreamingResponse:
         "Cache-Control": "no-cache",
         "X-Accel-Buffering": "no",
     })
+
+
+# --------------------------------------------------------- governance loop (P3)
+# The model never writes data — all mutations route through governance @actions.
+# This layer only CALLS them and builds the Actor from the request role; the
+# engine enforces the role gate. State (PENDING, audit log, praheri.db) is
+# module-global => single worker only.
+_ACTIONS = {
+    "clear_alert": governance.clear_alert,
+    "escalate_alert_to_case": governance.escalate_alert_to_case,
+    "request_account_freeze": governance.request_account_freeze,
+    "file_str": governance.file_str,
+}
+
+
+@app.post("/api/actions/{name}")
+def run_action(name: str, body: ActionRequest) -> dict[str, Any]:
+    """Invoke a governed AML action. Low-stakes execute immediately; high-stakes
+    return PENDING_APPROVAL and land in the MLRO queue."""
+    fn = _ACTIONS.get(name)
+    if not fn:
+        raise HTTPException(404, f"unknown action: {name}")
+    actor = Actor(id=f"demo_{body.role}", role=body.role)
+    try:
+        return fn(actor, **body.params)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+
+
+@app.get("/api/approvals")
+def list_approvals() -> list[dict[str, Any]]:
+    return governance.PENDING.list_pending()
+
+
+@app.post("/api/approvals/{ref}/approve")
+def approve_action(ref: str, body: ApproveRequest) -> dict[str, Any]:
+    """MLRO approves a pending action; it executes and is audited."""
+    actor = Actor(id=f"demo_{body.role}", role=body.role)
+    try:
+        return governance.approve(ref, actor)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+
+
+@app.get("/api/audit")
+def get_audit() -> list[dict[str, Any]]:
+    return governance.read_audit()
 
 
 @app.get("/api/alerts/{alert_id}/str/stream")
