@@ -1,7 +1,7 @@
 # Praheri — Project Status
 
-**Last updated:** 2026-06-29
-**Overall:** ✅ **Multi-vertical "Sovereign AIP OS" build COMPLETE (U1–U10, P0–P5)** + **UI revamped + deployed.** All 10 vertical units shipped; AML hero zero-diff throughout. A Palantir-dark **explainer/landing page is live at https://praheri.suraj94.cloud** (Netlify + Hostinger DNS, auto-SSL), and the Streamlit console is restyled dark to match. Branch `feat/multi-vertical-os` **merged to `main` and pushed** (repo now public). 111 deterministic + vertical tests green (+1 pre-existing flaky AML live test). Next: demo rehearsal / record backup video (and, deferred, an optional Next.js+Tailwind console rebuild).
+**Last updated:** 2026-06-30
+**Overall:** ✅ Multi-vertical build complete + deployed (prior sessions). **Session 4: Streamlit console got 3 stages of UX polish, then the Next.js+Tailwind console rebuild STARTED — Phase 0 shipped and proven.** The console now exists as a parallel **Next.js 16 + FastAPI** stack (`web/` + `server/`) with both risky spikes de-risked end-to-end (interactive fraud-ring graph + live Llama SSE token streaming). The **Streamlit console + `praheri/` engine are byte-for-byte untouched** and remain the guaranteed demo fallback. 6 commits this session (**unpushed**, see below). 90 deterministic tests green. Next: **Phase 1** of the Next.js build (AML hero — investigate + graph + signals + why-trail, cached).
 
 ---
 
@@ -45,10 +45,18 @@
 - **KTD-2 — Golden cache** per alert_id (`demo_cache/`) for 1ms crash-proof hero replay, with an honest Live/Cached badge.
 - **U8 — Local embeddings** via Ollama `nomic-embed-text` (not Chroma's default ONNX, which downloads a model) — keeps airplane-mode airtight.
 - **Detection is code, not the model.** `compute_signals()` queries the store directly for structuring/circular/shared-device signatures. Stronger sovereignty story (auditable logic, not a black box) and reliable FILE recommendations.
+- **KTD-3 (Session 4) — Next.js console built in PARALLEL; Streamlit stays the backup.** With 10 days to the demo, a from-scratch rebuild that *replaces* the working console is too risky. So the new stack (`web/` Next.js + `server/` FastAPI) is additive; `praheri/` engine and `app/streamlit_app.py` are never touched and remain the guaranteed fallback. Demo on whichever is ready.
+- **KTD-4 — FastAPI is a THIN wrapper; engine zero-diff.** The engine is Python (Llama/Ollama, SQLite, networkx, chromadb) and can't move to JS. `server/` imports + calls it. New capabilities (token streaming) go in NEW files (`server/stream.py`) that import agent constants read-only — `agent.call_llama` is never edited. Engine state (`PENDING`, `default_store()`, audit) is module-global ⇒ FastAPI MUST run `--workers 1`.
+- **KTD-5 — Sovereignty preserved in the new stack.** Fonts bundled locally via `next/font/local` (served from `/_next/static/media/`, NO Google Fonts CDN); `NEXT_TELEMETRY_DISABLED=1`; `/api/*` proxied same-origin via Next `rewrites()`. Verified zero external requests in-browser. (Note: `scan_egress()` only walks `praheri/`+`app/` `.py` — a later phase adds a wrapper extending it to `server/`+`web/`.)
 
 ---
 
 ## Open questions / known issues
+
+- **⚠️ 6 commits UNPUSHED** (Session 4) — `main` is 6 ahead of `origin/main`. stop_sync left the push to the user's judgment per the workflow; **push at next session start** (or now): `git push`. Commits `17f9f1a`→`a189890`.
+- **Next.js dev runtime (Session 4).** FastAPI runs on **:8800** (NOT 8000 — that port is taken by the explainer static server `app.serve_explainer` started earlier in dev). Next `rewrites()` proxy points `/api/*` → `localhost:8800`. **Must run `uvicorn server.main:app --workers 1`** (engine state is module-global). Launch: `uvicorn server.main:app --workers 1 --port 8800` + `cd web && npm run dev` (:3000). `web/node_modules` + `.next` are gitignored (regenerate with `npm install` in `web/`).
+- **agent-browser screenshot tool was broken all of Session 4** (CDP rendering hang — `screenshot` never returns/saves). Verified everything via DOM `eval` extraction instead (conclusive for function, but no pixel captures this session). Retry screenshots next session; may just need an agent-browser restart.
+- **Next.js console NOT yet eyeballed as pixels by Claude** — user confirmed it "looks really good" live, but only Phases 0 done (sidebar nav + AML spike page + placeholder sector/platform pages). Phases 1–6 (~8 days) are roadmap, not built.
 
 - **`PENDING` approvals are in-memory** — a Streamlit restart clears them. Fine for a single demo session; the `audit_log.jsonl` is the durable record. (Documented in the plan, U11.)
 - **DB mutates during demo** — proposing/approving a freeze sets an account to `frozen` in `praheri.db`. Re-run `python -m praheri.generate` between rehearsals to reset (in the demo checklist).
@@ -82,6 +90,17 @@ config-driven **multi-vertical platform** (the "OS" thesis). Brainstormed → sp
 
 **Test note:** full suite takes ~145s offline (pre-existing Ollama retry-backoff in `test_agent_tools`/`test_investigate`, 22 tests). Fast gate (everything except those two files) = ~4s, 45 tests — use it between units; run the full suite at phase boundaries.
 
-## Deferred (after the multi-vertical build lands)
+## Next.js console rebuild (Session 4 → ongoing) — phased roadmap
 
-**Run the demo.** Full 3-min flow per `docs/demo_script.md`: Alert Queue → Investigate `ALERT-R001` → ring → STR → propose freeze → MLRO approve → audit → sovereignty check → procurement. Then record backup video, build deck from `docs/DECK_OUTLINE.md`, rehearse Q&A (BUILD_BIBLE §12).
+Plan: `~/.claude/plans/shimmying-wandering-fern.md` (Phase 0 section + full roadmap). Build alongside Streamlit; reassess after each phase.
+- ✅ **Phase 0** — scaffold + de-risk spikes. `server/` (FastAPI: health, alerts, alert graph-JSON, SSE `/api/ask/stream`) + `web/` (Next 16/React 19/Tailwind v4: sidebar sector nav, local fonts, `GraphCanvas` via react-force-graph-2d, `useTokenStream`). Both spikes proven live.
+- **Phase 1 (next)** — AML hero, cached: `/api/alerts/{id}/investigate`; AML page with graph + signal cards + recommendation badge + why-trail. All from golden cache → instant.
+- **Phase 2** — streaming STR (structured-first event then live tokens) + object drill-down + OAG-vs-RAG.
+- **Phase 3** — governance loop: actions, pending, approve (mlro-gated), audit, role toggle. **Judged core complete.**
+- **Phase 4** — sectors (generic `SectorWorkspace` from `VerticalConfig` via `/api/verticals`) + platform counters.
+- **Phase 5** — guided demo overlay, confidence endpoint, evidence timeline.
+- **Phase 6** — extend egress scan to `server/`+`web/`, harden Ollama-down fallbacks, rehearse.
+
+## Deferred (independent of the Next.js build)
+
+**Run the demo + record backup video.** Full 3-min flow per `docs/demo_script.md` (works on the Streamlit console today): Platform → Alert Queue → Investigate `ALERT-R001` → ring → STR → propose freeze → MLRO approve → audit → sovereignty → vertical swap. Build deck from `docs/DECK_OUTLINE.md`, rehearse Q&A (BUILD_BIBLE §12). Also still deferred: range-aware fix for the flaky AML live test.

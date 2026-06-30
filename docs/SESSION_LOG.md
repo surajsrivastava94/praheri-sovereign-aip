@@ -1,5 +1,46 @@
 # Praheri — Session Log
 
+## [2026-06-30] Session 4 — Console UX polish (3 stages) → Next.js+FastAPI rebuild begun (Phase 0)
+
+### Outcome
+Polished the Streamlit console hard (self-explaining copy → visual polish → analytical depth), then pivoted to a **Next.js + Tailwind console rebuild** over a thin FastAPI layer, building it in parallel so the working Streamlit demo stays the guaranteed fallback. Phase 0 shipped: the two risky unknowns (interactive fraud-ring graph + live Llama token streaming) are proven end-to-end in the browser. 6 commits (unpushed).
+
+### What happened (in order)
+1. Fixed the explainer's "Launch console" nav button (CSS specificity bug: `.navlinks a` muted-grey overrode `.btn-solid`). Re-deployed to praheri.suraj94.cloud. Commit `17f9f1a`.
+2. **Self-explaining console** (`eb3162f`): collapsed orientation + glossary expanders; `use_case`/`what_you_see` added to `VerticalConfig` + all 5 cartridges (copy from the explainer); "👁 What you'll see here" callouts on every tab; action tooltips + 🔒 on high-stakes.
+3. **Guided demo mode** (`fc475f1`): `_DEMO_STEPS` (9 beats from demo_script.md) + persistent banner above the tab bar + sidebar 🎬 toggle/Back/Next/Restart. Works within Streamlit's "can't switch tabs programmatically" constraint (banner names the tab; manual Next advances; predicates only confirm ✓).
+4. **Stage 2 visual polish** (`38c8db4`): bundled Inter (variable) + IBM Plex Mono locally (`app/static/`, served via `[[theme.fontFaces]]` + `enableStaticServing` — zero Google Fonts egress); segmented-control role picker (🔍 Analyst / ✅ MLRO + caption); subtler demo banner with a fade/slide @keyframes.
+5. **Stage 3 deeper capability** (`8d7e47b`): confidence scoring (deterministic, explainable — ALERT-R001 → 95% High), "why this recommendation" 3-layer trail, evidence timeline (scoped ring-txn queries, sub-₹50k flags), object drill-down (selectbox → properties + linked groups). All display-only; engine zero-diff.
+6. **Pivot to Next.js** (user: "Streamlit not that good"). Decided (AskUserQuestion): build in PARALLEL, full fidelity (interactive graph + SSE streaming), left-sidebar sector nav, same repo. Planned via Explore×3 + Plan agent.
+7. **Phase 0 build** (`a189890`): `server/` FastAPI (health, alerts, alert graph-JSON via `serialize.py`, SSE `/api/ask/stream` via `stream.py`) + `web/` Next 16/React 19/Tailwind v4 (sidebar nav, local fonts via next/font/local, `GraphCanvas` react-force-graph-2d, `useTokenStream` EventSource hook, Palantir-dark tokens). Both spikes verified live; user confirmed "looks really good".
+
+### Key decisions
+- **KTD-3** — Next.js built in parallel; Streamlit + `praheri/` stay byte-for-byte the demo fallback (10-day deadline → don't bet the demo on a rebuild).
+- **KTD-4** — FastAPI is a thin wrapper; engine zero-diff. Streaming added in NEW `server/stream.py` (imports agent constants read-only); single-worker (module-global state).
+- **KTD-5** — sovereignty preserved: local fonts (no CDN), telemetry off, same-origin `/api` proxy. Verified zero external requests.
+- Streamlit polish stages were all display-only (engine zero-diff) — three commits before the pivot are still valuable on the fallback console.
+
+### Issues encountered + resolved
+- Explainer button contrast (CSS specificity) → nav-scoped override. ✅
+- Streamlit doesn't reload imported modules on rerun → had to restart the server to pick up `VerticalConfig`/config changes (noted for rehearsal resets). ✅
+- 3 `_what_you_see` callouts had literal `**markdown**` inside HTML divs → switched to `<b>`/`<i>`. ✅
+- FastAPI couldn't bind :8000 (explainer static server already there) → moved to **:8800**; updated Next proxy. ✅
+- **agent-browser screenshot tool hung the entire session** (CDP issue) → verified all UI via DOM `eval` extraction. → carry-over (retry next session)
+- 6 commits **not pushed** (stop_sync defers code push to user). → carry-over (push next session)
+
+### Artifacts produced
+- 6 commits on `main` (`17f9f1a`→`a189890`), unpushed.
+- New stack: `server/{__init__,main,serialize,stream}.py`, `web/` (Next.js app — `src/app/{layout,page,providers,fonts,globals.css,aml,sectors/[key],platform}`, `src/components/{Sidebar,GraphCanvas}`, `src/lib/{api,useEventStream}`, `public/fonts/*.woff2`).
+- Edited (Streamlit polish): `app/streamlit_app.py`, `praheri/verticals.py`, `app/explainer.html`, `.streamlit/config.toml`, `requirements.txt`, `.gitignore`; new `app/static/*.woff2`.
+- Plan: `~/.claude/plans/shimmying-wandering-fern.md` (Phase 0 + full Next.js roadmap).
+
+### Carry-over to next session
+- **Push the 6 commits** (`git push` — main is 6 ahead of origin).
+- **Phase 1 of the Next.js build**: AML hero cached — `/api/alerts/{id}/investigate` + AML page (graph + signal cards + recommendation badge + why-trail).
+- Retry agent-browser screenshots (tool was broken); eyeball the Next console pixels.
+- Runtime: `uvicorn server.main:app --workers 1 --port 8800` + `cd web && npm install && npm run dev` (:3000). `web/node_modules` gitignored.
+- Still deferred: record backup demo video; range-aware fix for the flaky AML live test.
+
 ## [2026-06-29] Session 3 — P4+P5 complete · UI revamp · deployed shareable link
 
 ### Outcome
