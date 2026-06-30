@@ -18,8 +18,9 @@ from fastapi.responses import StreamingResponse
 
 from praheri import agent
 from praheri.agent import LlamaUnavailable
-from praheri.store import OntologyStore
+from praheri.store import OntologyStore, _type_of
 from server.serialize import graph_json
+from server.str_prompt import build_str_messages
 from server.stream import stream_chat
 
 app = FastAPI(title="Praheri API", version="0.1")
@@ -66,6 +67,31 @@ def alert_investigate(alert_id: str) -> dict[str, Any]:
     return agent.investigate(alert_id, store=_store, use_cache=True)
 
 
+@app.get("/api/objects/{object_id}")
+def inspect_object(object_id: str) -> dict[str, Any]:
+    """Drill-down: a single ontology object's real properties + linked ids.
+    Proves the ontology is a queryable graph, not a chatbot. Read-only."""
+    otype = _type_of(object_id)
+    if not otype:
+        raise HTTPException(404, f"unknown object id: {object_id}")
+    obj = _store.get_object(otype, object_id)
+    if not obj:
+        raise HTTPException(404, f"no such object: {object_id}")
+    return obj
+
+
+@app.get("/api/alerts/{alert_id}/rag")
+def alert_rag(alert_id: str) -> dict[str, Any]:
+    """The RAG comparison answer (flattened text, links stripped). LIVE and
+    UNCACHED by design — the contrast with OAG is the point. 503 if Ollama down."""
+    if not _store.get_object("Alert", alert_id):
+        raise HTTPException(404, f"no such alert: {alert_id}")
+    try:
+        return agent.investigate_rag(alert_id, store=_store)
+    except LlamaUnavailable as e:
+        raise HTTPException(503, str(e))
+
+
 def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
@@ -76,6 +102,31 @@ def ask_stream(q: str) -> StreamingResponse:
     token feed end-to-end (Ollama -> FastAPI -> EventSource)."""
     def gen():
         messages = [{"role": "user", "content": q}]
+        try:
+            for tok in stream_chat(messages):
+                yield _sse("token", {"t": tok})
+            yield _sse("done", {"ok": True})
+        except LlamaUnavailable as e:
+            yield _sse("error", {"message": str(e)})
+
+    return StreamingResponse(gen(), media_type="text/event-stream", headers={
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    })
+
+
+@app.get("/api/alerts/{alert_id}/str/stream")
+def str_stream(alert_id: str) -> StreamingResponse:
+    """Stream a freshly-drafted STR token-by-token. The prompt is built from the
+    cached structured investigation (typology + cited ids + rationale), so the
+    narrative is grounded in real object_ids. Engine zero-diff — uses stream_chat
+    over agent constants, never agent.call_llama."""
+    if not _store.get_object("Alert", alert_id):
+        raise HTTPException(404, f"no such alert: {alert_id}")
+    inv = agent.investigate(alert_id, store=_store, use_cache=True)
+    messages = build_str_messages(inv)
+
+    def gen():
         try:
             for tok in stream_chat(messages):
                 yield _sse("token", {"t": tok})
