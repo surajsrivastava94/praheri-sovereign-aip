@@ -195,6 +195,67 @@ def _what_you_see(text: str, accent: str = _PLATFORM_ACCENT) -> None:
         unsafe_allow_html=True)
 
 
+def _signal_count(detail: str, evidence_ids: list[str]) -> int:
+    """Pull the headline count from a signal's detail string (it leads with the
+    number — '7 mule account(s)…', '6 …accounts transact…'); fall back to counting
+    the account evidence ids. Used by the confidence score (Stage 3)."""
+    import re
+    m = re.match(r"\s*(\d+)", detail or "")
+    if m:
+        return int(m.group(1))
+    return sum(1 for i in evidence_ids if i.startswith("ACC-"))
+
+
+def _confidence(inv: dict) -> tuple[int, str, list[str]]:
+    """Deterministic, UI-derived confidence for the recommendation — explainable
+    term-by-term (judges ask 'how computed?'). Pure function of the cached `inv`;
+    no engine change, no model call. Returns (score 0-100, band, reasons)."""
+    rec = inv.get("recommendation", "ESCALATE")
+    score = {"FILE": 60, "ESCALATE": 35, "CLEAR": 15}.get(rec, 35)
+    reasons = [f"base {rec} = {score}"]
+    typ_seen = set()
+    for s in inv.get("signals", []):
+        typ = s["typology"]
+        typ_seen.add(typ)
+        n = _signal_count(s.get("detail", ""), s.get("evidence_ids", []))
+        if typ == "structuring":
+            add = min(15 + 3 * max(0, n - 1), 30)
+            reasons.append(f"structuring ({n} mules) +{add}")
+        elif typ == "circular_layering":
+            add = 20
+            reasons.append(f"circular layering +{add}")
+        elif typ == "shared_device_ring":
+            add = min(15 + 2 * max(0, n - 5), 25)
+            reasons.append(f"shared-device ring ({n} accts) +{add}")
+        else:
+            add = 10
+            reasons.append(f"{typ} +{add}")
+        score += add
+    if len(typ_seen) >= 2:
+        score += 10
+        reasons.append(f"{len(typ_seen)} typologies corroborate +10")
+    if inv.get("policy_citations"):
+        score += 5
+        reasons.append("policy-grounded +5")
+    score = max(0, min(100, score))
+    band = "High" if score >= 75 else "Medium" if score >= 45 else "Low"
+    return score, band, reasons
+
+
+def _ring_timeline(store, ring_accounts: list[str], cap: int = 40) -> tuple[list[dict], int]:
+    """Chronological transactions among the ring accounts. Scoped to the ring via
+    per-account indexed queries — never a full-table scan of the 20k+ txns. Returns
+    (rows up to cap, total found). Read-only; engine untouched."""
+    seen: dict[str, dict] = {}
+    ring = set(ring_accounts)
+    for acct in ring_accounts:
+        for direction in ("from_account", "to_account"):
+            for t in store.query_objects("Transaction", **{direction: acct}):
+                seen[t["id"]] = t["properties"]
+    rows = sorted(seen.values(), key=lambda p: str(p.get("timestamp", "")))
+    return rows[:cap], len(rows)
+
+
 def _render_demo_guide(step: dict, idx: int, total: int) -> None:
     """The persistent guided-demo banner (above the tab bar, so it survives tab
     clicks). Shows the step pill, the tab to open, the action, and the narration
@@ -659,10 +720,13 @@ with tabs[2]:
             badge = {"FILE": "🔴", "ESCALATE": "🟠", "CLEAR": "🟢"}.get(
                 inv["recommendation"], "⚪")
             src = "🟢 Live" if inv["source"] == "live" else "💾 Cached"
-            c1, c2, c3 = st.columns(3)
+            conf_score, conf_band, conf_reasons = _confidence(inv)
+            c1, c2, c3, c4 = st.columns(4)
             c1.metric("Recommendation", f"{badge} {inv['recommendation']}")
             c2.metric("Typology", inv["typology"])
-            c3.metric("Source", src)
+            c3.metric("Confidence", f"{conf_score}% · {conf_band}")
+            c4.metric("Source", src)
+            st.caption("Confidence basis: " + " · ".join(conf_reasons))
 
             st.markdown("##### Fraud-ring graph (OAG traversal)")
             highlight = {inv["account_id"]} | set(
@@ -681,6 +745,84 @@ with tabs[2]:
             if inv.get("str_narrative"):
                 st.markdown("##### Draft STR narrative")
                 st.write(inv["str_narrative"])
+
+            _accent = _STATUS_COLOR.get(inv["recommendation"], _PLATFORM_ACCENT)
+
+            # --- Why this recommendation: the auditable decision trail (Stage 3) ---
+            with st.expander("🧠 Why this recommendation — the decision trail"):
+                _section("1 · Signals fired (deterministic engine)", _accent)
+                if inv.get("signals"):
+                    for s in inv["signals"]:
+                        chips = " ".join(f"`{i}`" for i in s.get("evidence_ids", []))
+                        st.markdown(f"- **{s['typology']}** — {s['detail']}")
+                        st.caption("Evidence: " + (chips or "—"))
+                else:
+                    st.markdown("- No typology signals fired.")
+                _section("2 · Deterministic floor rule", _accent)
+                st.markdown(
+                    "A fired signal is a *confirmed* typology — the engine forbids "
+                    "**CLEAR** and floors a real ring at **FILE**. The model may "
+                    "soften FILE→ESCALATE in genuine ambiguity, but can **never** "
+                    "downgrade a detected ring to CLEAR. Detection is code, not the "
+                    "model — that's what makes it auditable.")
+                if inv.get("signals") and inv["recommendation"] in ("FILE", "ESCALATE"):
+                    st.success("Floor applied: signals present → CLEAR was disallowed.")
+                _section("3 · Model judgment (Llama, layered on top)", _accent)
+                st.write(inv["rationale"] or "—")
+                st.caption("Cited: " + ", ".join(f"`{i}`" for i in inv["cited_ids"]))
+
+            # --- Evidence timeline: the fraud unfolding over time (Stage 3) ---
+            _section("🕐 Evidence timeline — the fraud unfolding", _accent)
+            try:
+                tl_accounts = inv.get("ring_summary", {}).get("accounts", []) or \
+                    [i for i in inv["objects_touched"] if i.startswith("ACC-")]
+                rows, n_total = _ring_timeline(store, tl_accounts)
+                if rows:
+                    table = [{
+                        "Time": str(p.get("timestamp", ""))[:16].replace("T", " "),
+                        "From": p.get("from_account", ""),
+                        "To": p.get("to_account", ""),
+                        "Amount": f"₹{p.get('amount', 0):,.0f}",
+                        "Channel": p.get("channel", ""),
+                        "Flag": "🔴 sub-₹50k" if p.get("amount", 0) < 50_000 else "",
+                    } for p in rows]
+                    st.dataframe(table, width="stretch", hide_index=True)
+                    st.caption(f"Showing {len(rows)} of {n_total} transactions among "
+                               "the ring accounts, chronological. 🔴 = sub-threshold "
+                               "deposit (the structuring/smurfing layer).")
+                else:
+                    st.caption("No ring transactions found for the timeline.")
+            except Exception as e:  # demo-safe: never crash the hero tab
+                st.caption(f"Timeline unavailable: {e}")
+
+            # --- Object drill-down: the ontology is a queryable graph (Stage 3) ---
+            _section("🔬 Inspect a cited object", _accent)
+            st.caption("The ontology is a live graph, not a chatbot — pick any "
+                       "object to see its real properties and links.")
+            _opts = ["— select —"] + sorted(
+                set(inv.get("cited_ids", [])) | set(inv.get("objects_touched", [])))
+            _oid = st.selectbox("Inspect object", _opts, key="drill_object_id",
+                                label_visibility="collapsed")
+            if _oid and _oid != "— select —":
+                try:
+                    from praheri.store import _type_of
+                    obj = store.get_object(_type_of(_oid), _oid)
+                    if obj is None:
+                        st.warning(f"Object {_oid} not found in store.")
+                    else:
+                        st.markdown(f"**{obj['type']}** · `{obj['id']}`")
+                        props = [{"property": k, "value": str(v)}
+                                 for k, v in obj["properties"].items()]
+                        st.table(props)
+                        links = obj.get("linked_ids", {})
+                        if any(links.values()):
+                            st.markdown("**Linked objects**")
+                            for lt, ids in links.items():
+                                if ids:
+                                    chips = " ".join(f"`{i}`" for i in ids)
+                                    st.markdown(f"- *{lt}* → {chips}")
+                except Exception as e:  # demo-safe
+                    st.caption(f"Inspect unavailable: {e}")
 
             # --- OAG vs RAG side-by-side (U13): the differentiator ---
             with st.expander("⚖️ OAG vs RAG — why structured objects win"):
