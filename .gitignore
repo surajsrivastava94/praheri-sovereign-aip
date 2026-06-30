@@ -42,6 +42,12 @@ demo_cache/*
 # pyvis-generated graph assets
 lib/
 
+# Next.js console (web/) — build + dependency artifacts
+web/node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+
 # reference-only material (Build Bible source, original starter zip) — not the codebase
 Cowork-Brainstorm/
 

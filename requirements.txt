@@ -9,5 +9,9 @@ pandas>=2.2
 requests>=2.31
 python-dotenv>=1.0
 pytest>=8.0
+# Next.js console backend: thin FastAPI layer over the engine (uvicorn already
+# transitively present). Engine + Streamlit console are unaffected.
+fastapi>=0.115
+uvicorn>=0.30
 # Llama is served separately via Ollama (https://ollama.com) — not a pip package.
 # Optional production serving: vllm, or NVIDIA NIM. The MODEL stays Llama.

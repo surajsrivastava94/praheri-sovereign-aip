@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Praheri Palantir-dark design system — matches app/explainer.html so the console
+   and the explainer read as one product. */
+:root {
+  --bg: #0a0e1a;
+  --surface: #0f172a;
+  --surface-2: #131c30;
+  --border: #334155;
+  --hairline: #1e293b;
+  --fg: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #4c9aff;
+  --file: #ff5630;
+  --escalate: #ffab00;
+  --clear: #36b37e;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-hairline: var(--hairline);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-file: var(--file);
+  --color-escalate: var(--escalate);
+  --color-clear: var(--clear);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { letter-spacing: -0.02em; font-weight: 700; }
+h1 { letter-spacing: -0.03em; }
+
+/* mono eyebrow used across the console */
+.eyebrow {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  color: var(--accent);
+}
