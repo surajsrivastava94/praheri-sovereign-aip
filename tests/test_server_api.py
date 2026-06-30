@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from server.main import app
 from server.str_prompt import build_str_messages
+from server.verticals_api import root_id_for
 
 client = TestClient(app)
 
@@ -173,3 +174,59 @@ def test_audit_log_records_actions():
     assert isinstance(rows, list) and rows
     for key in ("actor", "role", "action", "event", "model"):
         assert key in rows[-1]
+
+
+# --- P4: verticals + platform (offline — golden caches committed) ---
+
+def test_root_id_for_resolves_link_or_prop():
+    assert root_id_for({"linked_ids": {"raised_on": ["X"]}, "properties": {}}) == "X"
+    assert root_id_for({"linked_ids": {}, "properties": {"root_id": "Y"}}) == "Y"
+
+
+def test_verticals_list_and_counters():
+    body = client.get("/api/verticals").json()
+    assert body["counters"]["ontologies"] == 6
+    assert len(body["verticals"]) == 5
+    first = body["verticals"][0]
+    for key in ("key", "name", "signals"):
+        assert key in first
+
+
+def test_vertical_alerts():
+    r = client.get("/api/verticals/insurance_siu/alerts")
+    assert r.status_code == 200
+    assert r.json()  # non-empty
+
+
+def test_vertical_investigate_file_cached():
+    r = client.get("/api/verticals/insurance_siu/investigate",
+                   params={"root_id": "GAR-RING-01"})
+    assert r.status_code == 200
+    inv = r.json()
+    assert inv["recommendation"] == "FILE"
+    assert inv["source"] == "cached"
+    assert inv["signals"]
+
+
+def test_vertical_graph_has_highlights():
+    r = client.get("/api/verticals/insurance_siu/graph",
+                   params={"root_id": "GAR-RING-01"})
+    assert r.status_code == 200
+    g = r.json()
+    assert g["nodes"]
+    assert any(n["highlight"] for n in g["nodes"])
+
+
+def test_vertical_unknown_key_404():
+    r = client.get("/api/verticals/nope/alerts")
+    assert r.status_code == 404
+
+
+def test_sector_action_routes_to_shared_queue():
+    r = client.post("/api/actions/propose_vertical_action",
+                    json={"role": "analyst",
+                          "params": {"vertical": "insurance_siu",
+                                     "action_id": "refer_to_siu",
+                                     "target_id": "GAR-RING-01", "reason": "ring"}})
+    assert r.status_code == 200
+    assert r.json()["status"] == "PENDING_APPROVAL"

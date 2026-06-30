@@ -16,14 +16,16 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 
-from praheri import agent, governance
+from praheri import agent, governance, vertical_engine
 from praheri.agent import LlamaUnavailable
 from praheri.governance import Actor
 from praheri.store import OntologyStore, _type_of
+from praheri.verticals import REGISTRY, get_config, platform_counters
 from server.models import ActionRequest, ApproveRequest
 from server.serialize import graph_json
 from server.str_prompt import build_str_messages
 from server.stream import stream_chat
+from server.verticals_api import get_store, root_id_for
 
 app = FastAPI(title="Praheri API", version="0.1")
 
@@ -127,6 +129,9 @@ _ACTIONS = {
     "escalate_alert_to_case": governance.escalate_alert_to_case,
     "request_account_freeze": governance.request_account_freeze,
     "file_str": governance.file_str,
+    # sector actions — route through the SAME MLRO queue + audit (P4)
+    "propose_vertical_action": governance.propose_vertical_action,
+    "approve_purchase_order": governance.approve_purchase_order,
 }
 
 
@@ -164,6 +169,50 @@ def approve_action(ref: str, body: ApproveRequest) -> dict[str, Any]:
 @app.get("/api/audit")
 def get_audit() -> list[dict[str, Any]]:
     return governance.read_audit()
+
+
+# ----------------------------------------------------- verticals / platform (P4)
+# The platform thesis made literal: one engine, every sector. These wrap the
+# vertical engine (praheri/vertical_*.py) read-only — no per-vertical server code.
+def _vstore(key: str):
+    """Resolve a vertical store, mapping unknown key -> 404 and missing data -> 503."""
+    if key not in REGISTRY:
+        raise HTTPException(404, f"unknown vertical: {key}")
+    try:
+        return get_store(key)
+    except FileNotFoundError:
+        raise HTTPException(503, f"no data for {key} — run "
+                                 "`python -m praheri.generate_verticals`")
+
+
+@app.get("/api/verticals")
+def list_verticals() -> dict[str, Any]:
+    """The registry as JSON + live platform counters (for the sidebar + platform)."""
+    return {
+        "verticals": [c.model_dump() for c in REGISTRY.values()],
+        "counters": platform_counters(),
+    }
+
+
+@app.get("/api/verticals/{key}/alerts")
+def vertical_alerts(key: str) -> list[dict[str, Any]]:
+    return _vstore(key).query_objects("Alert")
+
+
+@app.get("/api/verticals/{key}/investigate")
+def vertical_investigate(key: str, root_id: str) -> dict[str, Any]:
+    return vertical_engine.compute_vertical_investigation(
+        get_config(key), _vstore(key), root_id, use_cache=True)
+
+
+@app.get("/api/verticals/{key}/graph")
+def vertical_graph(key: str, root_id: str) -> dict[str, Any]:
+    """The vertical ring graph, scoped + highlighted by its investigation."""
+    store = _vstore(key)
+    inv = vertical_engine.compute_vertical_investigation(
+        get_config(key), store, root_id, use_cache=True)
+    return graph_json(store.build_graph(inv["objects_touched"]),
+                      highlight=inv.get("cited_ids", []))
 
 
 @app.get("/api/alerts/{alert_id}/str/stream")
