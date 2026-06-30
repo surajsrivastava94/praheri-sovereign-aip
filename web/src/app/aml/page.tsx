@@ -8,7 +8,9 @@ import { GraphCanvas } from "@/components/GraphCanvas";
 import { RecommendationBadge } from "@/components/RecommendationBadge";
 import { SignalCards } from "@/components/SignalCards";
 import { WhyTrail } from "@/components/WhyTrail";
-import { useTokenStream } from "@/lib/useEventStream";
+import { StrPanel } from "@/components/StrPanel";
+import { ObjectInspector } from "@/components/ObjectInspector";
+import { OagRagPanel } from "@/components/OagRagPanel";
 
 export default function AmlPage() {
   const [alertId, setAlertId] = useState("ALERT-R001");
@@ -19,8 +21,6 @@ export default function AmlPage() {
     queryFn: () => getJSON<GraphData>(`/api/alerts/${alertId}/graph`),
   });
   const inv = useInvestigation(alertId);
-
-  const stream = useTokenStream();
 
   return (
     <div className="p-8 max-w-6xl">
@@ -99,38 +99,37 @@ export default function AmlPage() {
         {inv.data && <WhyTrail inv={inv.data} />}
       </section>
 
-      {/* live token stream — Phase 0 spike; full streaming STR arrives next phase */}
-      <section>
-        <h2 className="text-sm font-semibold text-fg mb-2 border-l-2 border-accent pl-2.5">
-          Live Llama stream
+      {/* suspicious transaction report — cached-first, live-stream opt-in */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-fg mb-3 border-l-2 border-accent pl-2.5">
+          Suspicious Transaction Report
         </h2>
-        <p className="text-muted text-xs mb-2">
-          Token-by-token streaming, proven end-to-end. The full streaming STR narrative
-          lands in the next phase.
+        {inv.data && <StrPanel inv={inv.data} />}
+      </section>
+
+      {/* object drill-down — the ontology is a queryable graph */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-fg mb-1 border-l-2 border-accent pl-2.5">
+          Inspect a cited object
+        </h2>
+        <p className="text-muted text-xs mb-3">
+          The ontology is a live graph, not a chatbot — pick any object to see its real
+          properties and links.
         </p>
-        <button
-          onClick={() =>
-            stream.start(
-              `/api/ask/stream?q=${encodeURIComponent(
-                "In two sentences, why is a funnel account with many sub-50000 deposits suspicious?",
-              )}`,
-            )
-          }
-          disabled={stream.streaming}
-          className="px-4 py-2 rounded-lg bg-accent text-[#04101f] font-medium text-sm disabled:opacity-50"
-        >
-          {stream.streaming ? "Streaming…" : "Ask Llama (stream)"}
-        </button>
-        <div className="mt-3 rounded-xl border border-border bg-surface p-4 min-h-[90px] text-sm leading-relaxed text-fg">
-          {stream.error ? (
-            <span className="text-escalate">⚠ {stream.error}</span>
-          ) : (
-            <>
-              {stream.text || <span className="text-muted">Click to stream a live answer…</span>}
-              {stream.streaming && <span className="animate-pulse">▋</span>}
-            </>
-          )}
-        </div>
+        {inv.data && (
+          <ObjectInspector ids={[...inv.data.cited_ids, ...inv.data.objects_touched]} />
+        )}
+      </section>
+
+      {/* OAG vs RAG — the differentiator */}
+      <section>
+        <h2 className="text-sm font-semibold text-fg mb-1 border-l-2 border-accent pl-2.5">
+          OAG vs RAG — why structured objects win
+        </h2>
+        <p className="text-muted text-xs mb-3">
+          Same ring, two retrieval strategies. OAG keeps the links; RAG flattens them to text.
+        </p>
+        {inv.data && <OagRagPanel inv={inv.data} />}
       </section>
     </div>
   );

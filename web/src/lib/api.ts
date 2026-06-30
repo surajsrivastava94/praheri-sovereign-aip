@@ -42,3 +42,12 @@ export type Investigation = {
   str_narrative: string;
   source: "live" | "cached";
 };
+
+export type OntologyObject = {
+  type: string;
+  id: string;
+  properties: Record<string, unknown>;
+  linked_ids: Record<string, string[]>;
+};
+
+export type RagAnswer = { answer: string; mode: string };
