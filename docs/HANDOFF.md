@@ -2,7 +2,7 @@
 
 **Project root:** `~/Praheri-AIP/` (the git repo + all code live here). `Cowork-Brainstorm/` is reference-only material (the Build Bible source + original starter zip) and is gitignored.
 
-**Today's goal:** **First: `git push`** (6 commits unpushed — `main` is 6 ahead of origin). Then **Phase 1 of the Next.js console rebuild** — AML hero, cached: add `GET /api/alerts/{id}/investigate` to `server/`, then build the AML page (`web/src/app/aml/page.tsx` already has the graph + SSE spike) into the full investigation view: fraud-ring graph + signal cards + recommendation badge + "why this recommendation" trail, all from the golden cache (instant). Build alongside Streamlit — **never touch `praheri/` or `app/streamlit_app.py`** (the guaranteed fallback). Plan: `~/.claude/plans/shimmying-wandering-fern.md`. Reassess after Phase 1 before Phases 2–6. Still deferred: record backup demo video; range-aware flaky-test fix.
+**Today's goal:** **Phase 1 of the Next.js console rebuild** — AML hero, cached: add `GET /api/alerts/{id}/investigate` to `server/`, then build the AML page (`web/src/app/aml/page.tsx` already has the graph + SSE spike) into the full investigation view: fraud-ring graph + signal cards + recommendation badge + "why this recommendation" trail, all from the golden cache (instant). Build alongside Streamlit — **never touch `praheri/` or `app/streamlit_app.py`** (the guaranteed fallback). Plan: `~/.claude/plans/shimmying-wandering-fern.md`. Reassess after Phase 1 before Phases 2–6. (Session 4 commits are pushed — `main` synced with origin.) Still deferred: record backup demo video; range-aware flaky-test fix.
 
 ---
 
