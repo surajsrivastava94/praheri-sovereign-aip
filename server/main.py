@@ -55,6 +55,17 @@ def alert_graph(alert_id: str) -> dict[str, Any]:
     return graph_json(g, highlight=inv.get("cited_ids", []))
 
 
+@app.get("/api/alerts/{alert_id}/investigate")
+def alert_investigate(alert_id: str) -> dict[str, Any]:
+    """The full cached investigation dict (signals, typology, recommendation,
+    rationale, cited_ids, policy_citations, str_narrative, source). Read-only —
+    a thin pass-through of agent.investigate(); ALERT-R001 is golden-cached, so
+    this returns instantly without touching Ollama."""
+    if not _store.get_object("Alert", alert_id):
+        raise HTTPException(404, f"no such alert: {alert_id}")
+    return agent.investigate(alert_id, store=_store, use_cache=True)
+
+
 def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
