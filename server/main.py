@@ -21,10 +21,12 @@ from praheri.agent import LlamaUnavailable
 from praheri.governance import Actor
 from praheri.store import OntologyStore, _type_of
 from praheri.verticals import REGISTRY, get_config, platform_counters
+from server.confidence import confidence
 from server.models import ActionRequest, ApproveRequest
 from server.serialize import graph_json
 from server.str_prompt import build_str_messages
 from server.stream import stream_chat
+from server.timeline import ring_timeline
 from server.verticals_api import get_store, root_id_for
 
 app = FastAPI(title="Praheri API", version="0.1")
@@ -69,6 +71,27 @@ def alert_investigate(alert_id: str) -> dict[str, Any]:
     if not _store.get_object("Alert", alert_id):
         raise HTTPException(404, f"no such alert: {alert_id}")
     return agent.investigate(alert_id, store=_store, use_cache=True)
+
+
+@app.get("/api/alerts/{alert_id}/confidence")
+def alert_confidence(alert_id: str) -> dict[str, Any]:
+    """Deterministic, explainable confidence (0-100 + band + term-by-term reasons)
+    for the recommendation. Pure function of the cached investigation."""
+    if not _store.get_object("Alert", alert_id):
+        raise HTTPException(404, f"no such alert: {alert_id}")
+    inv = agent.investigate(alert_id, store=_store, use_cache=True)
+    return confidence(inv)
+
+
+@app.get("/api/alerts/{alert_id}/timeline")
+def alert_timeline(alert_id: str) -> dict[str, Any]:
+    """Chronological transactions among the ring accounts (ring-scoped, capped,
+    sub-INR50,000 flagged)."""
+    if not _store.get_object("Alert", alert_id):
+        raise HTTPException(404, f"no such alert: {alert_id}")
+    inv = agent.investigate(alert_id, store=_store, use_cache=True)
+    ring_accounts = [i for i in inv["objects_touched"] if i.startswith("ACC-")]
+    return ring_timeline(_store, ring_accounts)
 
 
 @app.get("/api/objects/{object_id}")

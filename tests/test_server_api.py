@@ -9,6 +9,7 @@ import requests
 from fastapi.testclient import TestClient
 
 from server.main import app
+from server.confidence import confidence, signal_count
 from server.str_prompt import build_str_messages
 from server.verticals_api import root_id_for
 
@@ -230,3 +231,47 @@ def test_sector_action_routes_to_shared_queue():
                                      "target_id": "GAR-RING-01", "reason": "ring"}})
     assert r.status_code == 200
     assert r.json()["status"] == "PENDING_APPROVAL"
+
+
+# --- P5: confidence + evidence timeline (offline) ---
+
+def test_signal_count_leading_int_then_acc_fallback():
+    assert signal_count("7 mule account(s) funnelled…", []) == 7
+    assert signal_count("no leading number", ["ACC-A", "ACC-B", "TXN-X"]) == 2
+
+
+def test_confidence_alert_r001_is_high():
+    inv = client.get("/api/alerts/ALERT-R001/investigate").json()
+    c = confidence(inv)
+    assert c["score"] >= 75
+    assert c["band"] == "High"
+    assert any("base FILE = 60" in r for r in c["reasons"])
+    assert any("structuring" in r for r in c["reasons"])
+
+
+def test_confidence_endpoint():
+    r = client.get("/api/alerts/ALERT-R001/confidence")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {"score", "band", "reasons"}
+    assert body["band"] == "High"
+
+
+def test_confidence_unknown_alert_404():
+    assert client.get("/api/alerts/NOPE/confidence").status_code == 404
+
+
+def test_timeline_endpoint_sorted_capped_flagged():
+    r = client.get("/api/alerts/ALERT-R001/timeline")
+    assert r.status_code == 200
+    body = r.json()
+    rows, total = body["rows"], body["total"]
+    assert rows and total >= len(rows)
+    assert len(rows) <= 40
+    timestamps = [str(r.get("timestamp", "")) for r in rows]
+    assert timestamps == sorted(timestamps)
+    assert all(isinstance(r["sub_threshold"], bool) for r in rows)
+
+
+def test_timeline_unknown_alert_404():
+    assert client.get("/api/alerts/NOPE/timeline").status_code == 404
