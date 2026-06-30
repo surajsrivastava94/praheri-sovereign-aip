@@ -41,6 +41,7 @@ demo_cache/*
 
 # pyvis-generated graph assets
 lib/
+!web/src/lib/
 
 # Next.js console (web/) — build + dependency artifacts
 web/node_modules/
