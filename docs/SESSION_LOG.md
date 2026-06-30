@@ -1,5 +1,47 @@
 # Praheri — Session Log
 
+## [2026-07-01] Session 5 — Next.js console rebuild: Phases 1–5 COMPLETE (full Streamlit parity + depth)
+
+### Outcome
+Drove the Next.js + FastAPI console from Phase 0 (scaffold) to **Phases 1–5 all complete** in one session — the new stack now matches the entire Streamlit feature set PLUS the Stage-3 depth, all over the byte-for-byte-unchanged engine. 12 commits, all pushed. Each phase: `/ce-plan` (grounded in verified engine contract) → `/ce-work` (server endpoints + offline tests → frontend → in-browser verify → commit). Streamlit + `praheri/` zero-diff throughout; Streamlit stays the linked fallback until Phase 6.
+
+### What happened (in order)
+1. `/start_sync` → goal was Phase 1. User chose `ce-plan` + `ce-work` over subagent-driven-development for the build loop.
+2. **P1 — AML hero cached** (`d83c7ca`, `56c3ff8`): `/api/alerts/{id}/investigate`; AML page = graph + signal cards + recommendation badge + why-trail, instant from golden cache. Found + fixed a real `.gitignore` bug (bare `lib/` excluded `web/src/lib/` → Phase 0's api.ts/useEventStream.ts were never committed; added `!web/src/lib/`).
+3. **P2 — STR/drill-down/OAG-RAG** (`1572a3f`, `06df727`): `/objects/{id}`, `/rag` (live), `/str/stream` (SSE, prompt grounded in cited ids); StrPanel + ObjectInspector + OagRagPanel; removed the Phase-0 "Ask Llama" demo. OAG-vs-RAG reads as the differentiator (OAG decisive+cited vs RAG hedged).
+4. **P3 — governance loop** (`dd75ef8`, `5322420`): action/approve/audit endpoints; role context + sidebar toggle, ActionBar, /approvals (MLRO-gated) + /audit pages. Verified full propose→queue→approve→FROZEN→audit loop in-browser.
+5. **P4 — sectors + platform** (`0c0797d`, `acd61fb`): `/api/verticals` + per-key endpoints; ONE generic `SectorWorkspace` renders all 4 investigation verticals from `VerticalConfig` + a `ProcurementWorkspace`; registry-driven sidebar; platform dashboard (live 6/18/18/6 counters). Sector "Refer to SIU" → SAME MLRO queue → approve → SAME audit (governance parity proven).
+6. **P5 — depth polish** (`55a74b5`, `10de281`): `/confidence` (ALERT-R001 → 95% High, term-by-term) + `/timeline` (ring-scoped, sub-₹50k flags); ConfidenceMeter + EvidenceTimeline; **route-aware guided-demo overlay** (9 steps, Next/Back actually navigate — improvement over Streamlit).
+7. Pushed after every phase; started both servers for the user to browse; `/stop_sync`.
+
+### Key decisions
+- **Build via `ce-plan` → `ce-work` per phase** (user preference) rather than subagent-driven-development. Inline serial execution (units small + share files).
+- **Confidence + timeline as server endpoints** (not client TS) — testable, mirrors "detection is code".
+- **Guided demo route-aware** — Next/Back call `router.push(step.href)`; an improvement over Streamlit (which only names the tab).
+- **Sector actions reuse the P3 governance plumbing** — one MLRO queue + audit for every sector.
+- **Procurement = config-flagged branch** (`ProcurementWorkspace`), not the investigation flow (it's a budget/PO gate).
+- **Re-implement Streamlit-internal logic in `server/`** (root-id resolution, `_confidence`, `_ring_timeline`) — never import the frozen `app/streamlit_app.py`.
+
+### Issues encountered + resolved
+- **`.gitignore` bare `lib/`** silently excluded `web/src/lib/` → fixed with `!web/src/lib/` negation; Phase-0 lib files now tracked. ✅
+- **Stale uvicorn on :8800** from a prior session ran old code (P1 investigate 404'd) → killed + restarted. ✅
+- **`npm run build` kills the running `npm run dev`** on :3000 → restart dev after a build (noted in STATUS). ✅
+- **agent-browser screenshot worked again** (broken in S4); quirk: a `screenshot` right after relaunch grabs a blank tab — re-`open`+`wait` first. ✅
+- Non-cached vertical/AML alerts trigger a live (slow) `investigate`/`rag` — expected; demo drives cached ALERT-R001 + the 4 cached verticals.
+
+### Artifacts produced
+- 12 commits on `main` (`d83c7ca`→`10de281`), all pushed.
+- Plans: `docs/plans/2026-06-30-00{1,2,3,4,5}-...-plan.md` (one per phase).
+- New `server/`: `confidence.py`, `timeline.py`, `str_prompt.py`, `models.py`, `verticals_api.py` (+ many routes in `main.py`).
+- New `web/`: lib (`useInvestigation`, `useObject`, `useRag`, `useGovernance`, `useVerticals`, `useAmlExtras`, `role.tsx`, `demo.tsx`, `demoSteps.ts`); components (`RecommendationBadge`, `SignalCards`, `WhyTrail`, `StrPanel`, `ObjectInspector`, `OagRagPanel`, `ActionBar`, `RoleToggle`, `SectorWorkspace`, `ProcurementWorkspace`, `ConfidenceMeter`, `EvidenceTimeline`, `DemoOverlay`, `DemoToggle`); pages (`/approvals`, `/audit`, rebuilt `/aml`, `/platform`, `/sectors/[key]`).
+- `tests/test_server_api.py` — 33 tests, offline (1 live RAG test gated on Ollama).
+
+### Carry-over to next session
+- **Phase 6**: extend `sovereignty.scan_egress()` to walk `server/`+`web/` (currently only `praheri/`+`app/`); harden Ollama-down fallbacks; full cold-machine rehearsal.
+- **Then** switch the explainer's "Launch console" / run-steps from Streamlit → Next.js (+ re-deploy explainer).
+- Still deferred: record backup demo video; range-aware fix for the flaky AML live test.
+- Runtime reminder: `.venv/bin/uvicorn server.main:app --workers 1 --port 8800` + `cd web && npm run dev` → http://localhost:3000/aml.
+
 ## [2026-06-30] Session 4 — Console UX polish (3 stages) → Next.js+FastAPI rebuild begun (Phase 0)
 
 ### Outcome
