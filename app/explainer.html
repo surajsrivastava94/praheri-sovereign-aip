@@ -226,8 +226,9 @@
     <div class="navlinks">
       <a href="#ontology">Ontology</a>
       <a href="#oag">OAG vs RAG</a>
-      <a href="#principles">Principles</a>
+      <a href="#why-llama">Why Llama</a>
       <a href="#sectors">Sectors</a>
+      <a href="#jfs">For JFS</a>
       <a class="btn btn-solid" href="http://localhost:8501" id="launch-top">Launch console →</a>
     </div>
   </div>
@@ -237,9 +238,9 @@
 <header class="hero" id="top">
   <canvas id="net"></canvas>
   <div class="wrap">
-    <span class="eyebrow reveal">Sovereign AIP · On-prem · Open-weight Llama</span>
+    <span class="eyebrow reveal">Sovereign AIP · On-prem · Open-weight Llama · A design-partner proposal for BFSI</span>
     <h1 class="reveal" style="margin-top:18px">The investigation engine that <span style="color:var(--accent)">reasons over your world</span>, not text about it.</h1>
-    <p class="lede reveal">Praheri is a sovereign financial-crime platform built on a typed <b style="color:var(--text)">ontology</b> — a living digital twin of accounts, transactions, claims and companies. A local Llama traverses it to expose fraud rings, drafts the regulatory report, and <b style="color:var(--text)">proposes governed actions a human approves</b> — every step audited, nothing leaving the building.</p>
+    <p class="lede reveal">Praheri is a sovereign financial-crime platform built on a typed <b style="color:var(--text)">ontology</b> — a living digital twin of accounts, transactions, claims and companies. A local Llama traverses it to expose fraud rings, drafts the regulatory report, and <b style="color:var(--text)">proposes governed actions a human approves</b> — every step audited, nothing leaving the building. We're looking for one <b style="color:var(--text)">design partner</b> to harden it on real workflows — <a href="#jfs" style="color:var(--accent)">and we think that's Jio Financial Services</a>.</p>
     <div class="hero-cta reveal">
       <a class="btn btn-solid" href="http://localhost:8501" id="launch-hero">Launch the console →</a>
       <a class="btn" href="#ontology">What is the ontology?</a>
@@ -352,6 +353,75 @@ flagged last year…"
 
 <hr class="divider">
 
+<!-- ============ WHY BFSI, WHY NOW ============ -->
+<section id="why-bfsi">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The wedge — why BFSI, why now</span>
+      <h2>Financial crime is a graph problem, at the exact moment sovereign LLMs became viable.</h2>
+      <p>We chose Banking, Financial Services &amp; Insurance deliberately — it is where the pain, the regulation, and the data-shape all point at the same architecture. Three forces just converged:</p>
+    </div>
+    <div class="grid3">
+      <div class="pcard reveal">
+        <span class="n">01 · THE CRIME</span>
+        <h3>Fraud lives in the links</h3>
+        <p>Laundering, staged-claim rings and shell ownership are, by definition, <b style="color:var(--text)">patterns of connection</b> — not properties of any single row. A relationship-native ontology is the correct data model for the problem; flat tables and text chunks are not.</p>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">02 · THE MANDATE</span>
+        <h3>Regulation forbids the easy answer</h3>
+        <p>RBI data-localization and the DPDP Act make a frontier-cloud copilot a non-starter for this data. BFSI can't send customer transactions to a US API — so the only compliant path is <b style="color:var(--text)">on-prem, open-weight, auditable</b>. That constraint is our moat.</p>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">03 · THE UNLOCK</span>
+        <h3>Open weights are finally good enough</h3>
+        <p>Llama-class models can now classify a typology and draft a filing-grade narrative on a single on-prem box. The capability that used to require a frontier API now runs <b style="color:var(--text)">inside the building</b> — for the first time, sovereign and capable are no longer a trade-off.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ WHAT ML CAN'T DO THAT LLAMA DOES ============ -->
+<section id="why-llama">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The honest division of labour</span>
+      <h2>We didn't replace ML with an LLM. We use each for what it's actually best at.</h2>
+      <p>Classic graph algorithms and rules engines are <i>better</i> than any LLM at <b style="color:var(--text)">finding</b> a ring — so that's exactly what does the detection here, in deterministic Python. The Llama earns its place on the two jobs traditional ML structurally <i>cannot</i> do. This is why the recommendation is trustworthy and the platform generalizes.</p>
+    </div>
+    <div class="vs">
+      <div class="card rag reveal">
+        <div class="label">Deterministic engine · does the finding</div>
+        <h3>Graph + rules detect the ring</h3>
+        <p>Ring traversal, structuring / circular-flow / shared-device detection and the risk floor are pure code — reproducible, auditable, no hallucination. A fired signal is a <i>confirmed</i> typology the model may escalate but can never downgrade to CLEAR.</p>
+        <div class="ex">traverse_ring()  → the network
+compute_signals() → the typology
+deterministic floor → never un-flags
+
+→ this is what ML/graph is great at
+→ so the LLM never does the detecting</div>
+      </div>
+      <div class="card oag reveal">
+        <div class="label">Llama · does what ML can't</div>
+        <h3>Synthesis + generalization</h3>
+        <p><b style="color:var(--text)">1 · It writes the report a human can sign.</b> Graph algorithms output a diagram and a risk score. But the compliance officer has to file an actual written report — plain English that names each account and transaction and explains, in words, why it's suspicious. Writing that report, grounded in the bank's own rules, is exactly what an LLM is good at and a graph model can't do. <span style="color:var(--faint)">(A filing-grade STR for FIU-IND, citing real object IDs.)</span></p>
+        <p><b style="color:var(--text)">2 · One brain works for every department.</b> A traditional fraud model must be custom-built and re-trained for each area — one for banking, a separate one for insurance, another for lending — each needing its own data and its own team. The same Llama handles all of them by just swapping the settings file. No retraining, no new team per sector. <span style="color:var(--faint)">(Zero per-domain feature engineering or labelled training set.)</span></p>
+        <div class="ex">"Accounts <span class="id">ACC-MULE-01</span>…<span class="id">06</span> each received
+sub-₹50k deposits then funnelled to
+<span class="id">ACC-BENEF-STRUCT</span> — structuring under
+[policy §]. Recommend FILE."
+
+→ a document a human can sign
+→ same engine, any ontology, 0 new code</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
 <!-- ============ PRINCIPLES / USP ============ -->
 <section id="principles">
   <div class="wrap">
@@ -414,21 +484,24 @@ flagged last year…"
 <section id="sectors">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow">The cartridges — six sectors</span>
-      <h2>Same engine. Different ontology. Expand each to see what it does.</h2>
-      <p>Each sector is a configuration — a set of typed objects, the signals to detect, and the governed actions a human approves. The engine underneath never changes.</p>
+      <span class="eyebrow">The cartridges — Phase 1 with JFS, then the platform</span>
+      <h2>Two sectors map onto Jio's group today. The rest is your roadmap.</h2>
+      <p>Each sector is a configuration — typed objects, the signals to detect, the governed actions a human approves. The engine never changes. <b style="color:var(--text)">AML and Insurance are where we'd start with JFS</b> — they sit directly on Jio Payments Bank, Jio Finance and Jio Insurance Broking. The other four prove the same engine already reaches across the group.</p>
     </div>
+
+    <div class="eyebrow reveal" style="margin:6px 0 14px; color:var(--accent)">◆ Phase 1 — live today, mapped to JFS</div>
     <div class="sectors">
 
       <details class="sector reveal" open>
         <summary>
           <span class="ico" style="border-color:rgba(255,86,48,0.4)">🛡️</span>
-          <span class="st"><span class="nm">AML — Anti-Money-Laundering</span><span class="rg">The hero · RBI · FIU-IND · STR filing</span></span>
+          <span class="st"><span class="nm">AML — Anti-Money-Laundering</span><span class="rg">Jio Payments Bank · Jio Finance (NBFC) · UPI · RBI / FIU-IND · STR filing</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          Banks generate thousands of transaction-monitoring alerts a day; analysts drown in false positives while real laundering hides in the noise. Praheri traverses from the flagged account across its transaction links to counterparties, customers and shared devices to expose the surrounding network — then drafts a Suspicious Transaction Report grounded in object IDs.
+          <b style="color:var(--text)">For JFS:</b> Jio Payments Bank + UPI + Jio Finance move retail money at Reliance scale — which is precisely where mule networks and structuring hide. Banks generate thousands of transaction-monitoring alerts a day; analysts drown in false positives while real laundering hides in the noise. Praheri traverses from the flagged account across its transaction links to counterparties, customers and shared devices to expose the surrounding network — then drafts a Suspicious Transaction Report grounded in object IDs, ready for FIU-IND.
           <div class="meta">
+            <div class="m"><div class="ml">JFS entity</div><div class="mv"><code>Jio Payments Bank · Jio Finance · UPI</code></div></div>
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Account · Transaction · Device · Counterparty</code></div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">Structuring / smurfing, layering, funnel accounts, circular mule flows</div></div>
             <div class="m"><div class="ml">Governed action</div><div class="mv"><code>request_account_freeze</code> · <code>file_str</code> → MLRO approves</div></div>
@@ -436,15 +509,16 @@ flagged last year…"
         </div>
       </details>
 
-      <details class="sector reveal">
+      <details class="sector reveal" open>
         <summary>
           <span class="ico" style="border-color:rgba(255,86,48,0.4)">🚑</span>
-          <span class="st"><span class="nm">Insurance — Claims-Fraud SIU</span><span class="rg">IRDAI · DPDP Act 2023</span></span>
+          <span class="st"><span class="nm">Insurance — Claims-Fraud SIU</span><span class="rg">Jio Insurance Broking · Allianz Jio Reinsurance · IRDAI · DPDP Act 2023</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          A single claim looks legitimate in isolation — organized fraud only shows up in the links <i>between</i> claims. Praheri traverses from a suspicious claim to its policyholder, repair garage, claimant and policy, surfacing entities that recur across supposedly unrelated claims. The signal is shared-node density: one workshop or person at the center of many "accidents."
+          <b style="color:var(--text)">For JFS:</b> Jio Insurance Broking and the Allianz Jio reinsurance JV put the group squarely in claims risk — where organized fraud is the margin killer. A single claim looks legitimate in isolation; organized fraud only shows up in the links <i>between</i> claims. Praheri traverses from a suspicious claim to its policyholder, repair garage, claimant and policy, surfacing entities that recur across supposedly unrelated claims. The signal is shared-node density: one workshop or person at the centre of many "accidents."
           <div class="meta">
+            <div class="m"><div class="ml">JFS entity</div><div class="mv"><code>Jio Insurance Broking · Allianz Jio Reinsurance</code></div></div>
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Claim · Garage · Claimant · Policy</code></div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">Staged-accident rings, garage/provider collusion, identity reuse</div></div>
             <div class="m"><div class="ml">Governed action</div><div class="mv"><code>refer_to_siu</code> — hold payout pending review</div></div>
@@ -452,14 +526,19 @@ flagged last year…"
         </div>
       </details>
 
+    </div>
+
+    <div class="eyebrow reveal" style="margin:34px 0 14px; color:var(--muted)">◇ The platform reach — same engine, JFS's expansion roadmap</div>
+    <div class="sectors">
+
       <details class="sector reveal">
         <summary>
           <span class="ico" style="border-color:rgba(0,184,217,0.4)">🏦</span>
-          <span class="st"><span class="nm">Lending — Early-Warning Signals</span><span class="rg">RBI EWS (&gt;₹5 Cr) · Digital Lending 2022</span></span>
+          <span class="st"><span class="nm">Lending — Early-Warning Signals</span><span class="rg">Maps to Jio Finance (NBFC) · RBI EWS · Digital Lending 2022</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          Loans rarely go bad overnight; stress is visible months before an account is classified NPA, but the signals sit scattered across systems. Praheri traverses from a borrower to its loans, directors, related parties and repayment history to assemble a live risk picture — catching distress spreading through a shared-control network before it surfaces in the books.
+          As Jio Finance scales its loan book, stress is visible months before an account is classified NPA — but the signals sit scattered across systems. Praheri traverses from a borrower to its loans, directors, related parties and repayment history to assemble a live risk picture — catching distress spreading through a shared-control network before it surfaces in the books.
           <div class="meta">
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Borrower · Loan · Director · Inflow</code></div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">EMI-bounce stress, common-director contagion, circular related-party lending</div></div>
@@ -471,11 +550,11 @@ flagged last year…"
       <details class="sector reveal">
         <summary>
           <span class="ico" style="border-color:rgba(54,179,126,0.4)">📈</span>
-          <span class="st"><span class="nm">Wealth — Suitability &amp; Mis-selling</span><span class="rg">SEBI IA Regs 2013 · SCORES</span></span>
+          <span class="st"><span class="nm">Wealth — Suitability &amp; Mis-selling</span><span class="rg">Maps to JioBlackRock (AMC) · SEBI IA Regs · SCORES</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          Advisors face incentives to push high-commission products onto clients they don't fit, exposing the firm to SEBI action and restitution. Praheri traverses from a client to their suitability profile, sales, products and advisor, comparing what was sold against the client's documented risk appetite — and flagging advisors who breach repeatedly across a book.
+          With JioBlackRock bringing asset management to the group, suitability risk follows. Advisors face incentives to push high-commission products onto clients they don't fit, exposing the firm to SEBI action and restitution. Praheri traverses from a client to their suitability profile, sales, products and advisor, comparing what was sold against the client's documented risk appetite — and flagging advisors who breach repeatedly across a book.
           <div class="meta">
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Client · SuitabilityProfile · Sale · Product · Adviser</code></div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">Suitability breach, churning, advisor-level mis-selling clusters</div></div>
@@ -487,11 +566,11 @@ flagged last year…"
       <details class="sector reveal">
         <summary>
           <span class="ico" style="border-color:rgba(153,141,217,0.4)">🏢</span>
-          <span class="st"><span class="nm">Corporate — UBO / Ownership</span><span class="rg">RBI CDD/EDD · FATF Rec 24</span></span>
+          <span class="st"><span class="nm">Corporate — UBO / Ownership</span><span class="rg">Group-wide KYC · RBI CDD/EDD · FATF Rec 24</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          Regulators require knowing the real human Ultimate Beneficial Owner behind a corporate customer, but ownership is deliberately obscured through layered holdings across jurisdictions. Praheri traverses the company-owns-company graph through multiple layers to compute effective control and resolve the true UBO — the signal is the shape of the ownership graph itself.
+          Every JFS entity onboarding a corporate customer must know the real human Ultimate Beneficial Owner — but ownership is deliberately obscured through layered holdings across jurisdictions. Praheri traverses the company-owns-company graph through multiple layers to compute effective control and resolve the true UBO — the signal is the shape of the ownership graph itself.
           <div class="meta">
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Company · UBO</code> via <code>owns →</code> shareholding</div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">Circular / cross-holdings, shell layers, &lt;25% threshold evasion</div></div>
@@ -503,11 +582,11 @@ flagged last year…"
       <details class="sector reveal">
         <summary>
           <span class="ico" style="border-color:rgba(101,84,192,0.4)">📦</span>
-          <span class="st"><span class="nm">Procurement — Maverick Spend</span><span class="rg">Internal controls · DoA policy</span></span>
+          <span class="st"><span class="nm">Procurement — Maverick Spend</span><span class="rg">The non-financial proof · Reliance group internal controls</span></span>
           <span class="ex-ic">+</span>
         </summary>
         <div class="body">
-          The non-financial proof of the platform thesis: enterprises lose margin and invite collusion when employees buy off-contract or split orders to dodge approval limits. Praheri traverses from a requisition to its vendor, budget and contract, checking spend against policy and the Delegation-of-Authority matrix — the exact same engine, a completely different ontology.
+          The proof the platform isn't AML-shaped plumbing: the same engine runs a completely non-financial ontology. Enterprises lose margin and invite collusion when employees buy off-contract or split orders to dodge approval limits. Praheri traverses from a requisition to its vendor, budget and contract, checking spend against policy and the Delegation-of-Authority matrix — the exact same engine, a completely different ontology, relevant to any Reliance-group entity.
           <div class="meta">
             <div class="m"><div class="ml">Objects traversed</div><div class="mv"><code>Requisition · Vendor · Budget</code></div></div>
             <div class="m"><div class="ml">Detects</div><div class="mv">Maverick spend, budget / DoA breach, invoice-splitting, vendor collusion</div></div>
@@ -519,6 +598,110 @@ flagged last year…"
     </div>
   </div>
 </section>
+
+<hr class="divider">
+
+<!-- ============ DESIGN PARTNER: JFS ============ -->
+<section id="jfs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The proposal — design partner</span>
+      <h2>Why Jio Financial Services, and how we'd build it together.</h2>
+      <p>JFS is the rare institution whose group spans <b style="color:var(--text)">every sector this engine already runs</b> — payments, lending, insurance, asset management — under one roof, at Reliance scale, greenfield enough to build compliance-native rather than retrofit it. We're not selling a finished product; we're proposing a <b style="color:var(--text)">design partnership</b> to harden Phase 1 on your real AML and insurance workflows.</p>
+    </div>
+
+    <!-- their offerings -> our mapping -->
+    <div class="layers">
+      <div class="layer reveal">
+        <span class="tag">Your<br>offering</span>
+        <div>
+          <h3>Jio Payments Bank · Jio Finance · UPI</h3>
+          <p>Retail money movement at Reliance scale is the natural home of mule networks and structuring. → <b style="color:var(--text)">Praheri AML</b>: expose the ring, draft the STR for FIU-IND, propose the freeze — human-approved, audited.</p>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag">Your<br>offering</span>
+        <div>
+          <h3>Jio Insurance Broking · Allianz Jio Reinsurance</h3>
+          <p>Claims exposure is where organized fraud erodes the loss ratio. → <b style="color:var(--text)">Praheri Insurance SIU</b>: surface staged-accident and garage-collusion rings across otherwise-unrelated claims before payout.</p>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag">Your<br>roadmap</span>
+        <div>
+          <h3>JioBlackRock · group KYC · Reliance procurement</h3>
+          <p>As the group expands, the <i>same engine</i> extends to wealth suitability, corporate UBO resolution and procurement controls — zero engine code per sector. One platform, the whole JFS surface.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- value / usp / deliverables / adoption -->
+    <div class="grid3" style="margin-top:16px">
+      <div class="pcard reveal">
+        <span class="n">VALUE</span>
+        <h3>What JFS gets</h3>
+        <ul>
+          <li>Fewer false positives, faster analyst throughput</li>
+          <li>Filing-grade STRs drafted, not hand-written</li>
+          <li>Insurance fraud caught before payout</li>
+          <li>One platform across the whole group, not six tools</li>
+          <li>Compliance-native from day one — no retrofit</li>
+        </ul>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">USP</span>
+        <h3>Why only this works</h3>
+        <ul>
+          <li>Sovereign: on-prem, open-weight — RBI/DPDP-compliant by architecture</li>
+          <li>OAG over a typed ontology — reasons on structure, cites real IDs</li>
+          <li>Copilot, not autopilot — human approves every action, all audited</li>
+          <li>Reusable engine — 0 lines of engine code per new sector</li>
+        </ul>
+      </div>
+      <div class="pcard reveal">
+        <span class="n">DELIVERABLES</span>
+        <h3>What we ship together</h3>
+        <ul>
+          <li>AML + Insurance cartridges on JFS's own ontology</li>
+          <li>Connectors to JFS transaction &amp; claims systems</li>
+          <li>MLRO / SIU approval + audit workflow, JFS roles</li>
+          <li>On-prem deployment, zero-egress verified</li>
+          <li>A co-defined success metric per sector</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- adoption roadmap -->
+    <div class="sec-head reveal" style="margin-top:46px; max-width:none">
+      <span class="eyebrow">How you adopt it — a staged partnership</span>
+    </div>
+    <div class="layers">
+      <div class="layer reveal">
+        <span class="tag" style="color:var(--accent)">Stage 0<br>2–4 wks</span>
+        <div>
+          <h3>Sandbox pilot — AML, your data shape</h3>
+          <p>Deploy on-prem against a masked slice of Jio Payments Bank transactions. Prove the ring-to-STR loop on real workflow shape. Success metric agreed up front. No data leaves JFS.</p>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag" style="color:var(--accent)">Stage 1<br>1 quarter</span>
+        <div>
+          <h3>Design-partner hardening — AML + Insurance</h3>
+          <p>Iterate the two Phase-1 cartridges on live JFS ontology and MLRO/SIU feedback. Wire the real approval + audit workflow. This is where we co-build — your analysts shape the product.</p>
+        </div>
+      </div>
+      <div class="layer reveal">
+        <span class="tag">Stage 2<br>roadmap</span>
+        <div>
+          <h3>Platform rollout — group-wide</h3>
+          <p>Extend the same engine to Jio Finance lending EWS, JioBlackRock suitability, group UBO and procurement — each a config cartridge, not a new build. One sovereign intelligence layer for all of JFS.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
 
 <!-- ============ CTA ============ -->
 <section style="padding-top:30px">
