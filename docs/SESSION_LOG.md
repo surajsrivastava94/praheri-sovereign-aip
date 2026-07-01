@@ -1,5 +1,40 @@
 # Praheri — Session Log
 
+## [2026-07-01] Session 6 — Explainer reframed as a Jio Financial Services design-partner pitch (same-day continuation of S5)
+
+### Outcome
+After S5's stop_sync, continued same-day: turned `app/explainer.html` from a generic BFSI product page into a **design-partner pitch to Jio Financial Services**, grounded in JFS's real group structure. Committed, pushed, and re-deployed live to https://praheri.suraj94.cloud. Also answered two positioning questions (what Llama does vs traditional ML; OAG-vs-RAG in laymen terms) that shaped the copy. 1 commit; engine + both consoles untouched.
+
+### What happened (in order)
+1. User asked (conceptually) what Llama does here vs traditional ML, and OAG-vs-RAG in plain terms → clarified the honest division of labour: **detection = deterministic graph/rules code** (what ML/graph is best at, kept in Python); **Llama = filing-grade narrative synthesis + zero-retrain cross-domain generalization** (what ML structurally can't). OAG-vs-RAG = *how you feed the LLM* (structured objects+links vs flattened text), not "AI vs old software."
+2. Feedback: reframe the explainer as a JFS pitch, double down on AML + Insurance (JFS-relevant), add "why BFSI / why now" + "why OAG/ontology now / what ML can't do", structured as Value/USP/Deliverables/Adoption.
+3. Grounded JFS offerings via Wikipedia (Jio Payments Bank, Jio Finance/NBFC, Jio Insurance Broking, Allianz Jio Reinsurance, JioBlackRock). Mapping is tight: **AML → Jio Payments Bank/Finance/UPI; Insurance → Jio Insurance Broking/Allianz Jio Reinsurance.**
+4. Decisions (AskUserQuestion): BFSI deck with JFS as *named* design partner (not JFS-branded throughout); sectors → two-tier (AML+Insurance = "Phase 1 with JFS", other 4 = platform roadmap).
+5. Rewrote `app/explainer.html` (reusing existing CSS): hero/nav signal a design-partner proposal; new **Why BFSI / why now** (3 cards), **Why Llama / what ML can't do** (side-by-side), two-tier **Sectors**, and a **Design partner: JFS** section (offerings→mapping + VALUE/USP/DELIVERABLES + Stage 0/1/2 adoption roadmap). Verified tag balance + screenshots.
+6. Feedback: the "filing-grade narrative / prose / subgraph" copy was too jargon-heavy → rewrote both "Why Llama" cards **plain-first** ("writes the report a human can sign", "one brain works for every department") with domain terms (STR/FIU-IND, feature engineering) tucked in muted grey as expert grounding.
+7. Committed `b5f87d2`, pushed, `netlify deploy --prod` → live + verified (curl found "Jio Financial Services", "For JFS", "design partner"). Stopped all servers.
+
+### Key decisions
+- **Explainer = named JFS design-partner pitch**, BFSI-generic frame (reusable), AML+Insurance foregrounded and mapped to real Jio entities.
+- **Honest ML/LLM framing** (now in the explainer): detection stays deterministic code; the LLM owns narrative synthesis + zero-retrain generalization. Don't overclaim "LLM finds fraud better."
+- **Plain-first copy, jargon as grounding** — lead with what a non-expert understands, append the domain term in muted text so experts see it's researched.
+- **`app/explainer.html` intentionally diverges** from the frozen multi-vertical build now — it's the pitch surface, not the engine (engine + consoles still zero-diff).
+
+### Issues encountered + resolved
+- **Backgrounded `npm run dev`/servers kept dying** (subshell cleanup) → relaunched with `nohup`; stable. ✅
+- **`:8000` "Address already in use" after kill** — `serve_explainer.py` has no `allow_reuse_address`, socket sits in TIME_WAIT ~30s → retried until clear; noted the one-line fix as deferred (frozen `app/` stack). Workaround: open `file://…/app/explainer.html` directly. ✅
+- **WebSearch API 400s** repeatedly → grounded JFS via WebFetch on Wikipedia instead. ✅
+
+### Artifacts produced
+- 1 commit `b5f87d2` on `main` (pushed): `docs(explainer): reframe as a Jio Financial Services design-partner pitch`.
+- `app/explainer.html` rewritten (now 10 sections; new ids `why-bfsi`, `why-llama`, `jfs`).
+- Re-deployed to Netlify prod → https://praheri.suraj94.cloud (deploy `6a4513a3…`).
+
+### Carry-over to next session
+- **Phase 6** (unchanged from S5): extend `sovereignty.scan_egress()` to `server/`+`web/`; harden Ollama-down fallbacks; cold-machine rehearsal. THEN switch explainer CTA links Streamlit(:8501)→Next.js(:3000/aml) + re-deploy.
+- Optional 1-liner: add `allow_reuse_address = True` to `app/serve_explainer.py` (avoids the TIME_WAIT rebind pain) — deferred, in the frozen `app/` stack.
+- Still deferred: backup demo video; range-aware flaky AML test fix.
+
 ## [2026-07-01] Session 5 — Next.js console rebuild: Phases 1–5 COMPLETE (full Streamlit parity + depth)
 
 ### Outcome
