@@ -1,0 +1,18 @@
+{
+"type":"Customer",
+"id":"CUST-ACC-MULE-02",
+"properties":{
+"customer_id":"CUST-ACC-MULE-02",
+"name":"Noah Karpe",
+"kyc_risk_rating":"medium",
+"pep_flag":0,
+"nationality":"IN",
+"occupation":"self-employed",
+"onboarding_date":"2025-07-09T00:00:00"
+},
+"linked_ids":{
+"owns":[
+"ACC-MULE-02"
+]
+}
+}

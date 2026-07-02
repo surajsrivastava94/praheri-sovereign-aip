@@ -1,0 +1,18 @@
+{
+"type":"Customer",
+"id":"CUST-ACC-MULE-01",
+"properties":{
+"customer_id":"CUST-ACC-MULE-01",
+"name":"Yachana Dewan",
+"kyc_risk_rating":"medium",
+"pep_flag":0,
+"nationality":"IN",
+"occupation":"self-employed",
+"onboarding_date":"2025-01-07T00:00:00"
+},
+"linked_ids":{
+"owns":[
+"ACC-MULE-01"
+]
+}
+}

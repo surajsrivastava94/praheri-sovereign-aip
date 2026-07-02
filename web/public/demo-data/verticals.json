@@ -1,0 +1,472 @@
+{
+"verticals":[
+{
+"key":"procurement",
+"name":"Procurement \u2014 Maverick Spend",
+"icon":"\ud83d\udce6",
+"accent_color":"#6554C0",
+"tagline":"Same engine, a non-financial ontology \u2014 the platform thesis, proven.",
+"regulator":"Internal controls \u00b7 DoA policy",
+"use_case":"Enterprises lose margin and invite collusion when staff buy off-contract or split orders to dodge approval limits. The same engine checks each requisition against budget and the Delegation-of-Authority matrix \u2014 a completely different ontology, zero engine code changed.",
+"what_you_see":"Below: open purchase requisitions. Submitting one that exceeds the remaining budget is routed to the MLRO approval queue \u2014 the exact same governance gate as an AML account freeze.",
+"object_types":[
+{
+"name":"Requisition",
+"icon":"\ud83d\udcdd",
+"color":"#6554C0",
+"key_props":[
+"amount",
+"description",
+"status"
+]
+},
+{
+"name":"Vendor",
+"icon":"\ud83c\udfed",
+"color":"#FFAB00",
+"key_props":[
+"name",
+"country",
+"risk_rating"
+]
+},
+{
+"name":"Budget",
+"icon":"\ud83d\udcb0",
+"color":"#36B37E",
+"key_props":[
+"department",
+"cap",
+"spent",
+"remaining"
+]
+}
+],
+"link_types":[
+"from_vendor",
+"against_budget"
+],
+"kpi_cards":[
+{
+"label":"Open requisitions",
+"value":"2",
+"delta":null
+},
+{
+"label":"Budget cap (IT)",
+"value":"\u20b95,00,000",
+"delta":null
+},
+{
+"label":"Over-budget POs",
+"value":"1",
+"delta":"needs MLRO"
+}
+],
+"signals":[],
+"actions":[
+{
+"id":"approve_purchase_order",
+"label":"Submit PO",
+"requires_approval":true
+}
+],
+"sample_data_path":"data/verticals/procurement.json",
+"golden_cache_key":"procurement"
+},
+{
+"key":"insurance_siu",
+"name":"Insurance \u2014 Claims Fraud (SIU)",
+"icon":"\ud83d\udee1",
+"accent_color":"#FF5630",
+"tagline":"Staged-accident rings, same graph engine as AML \u2014 different nouns.",
+"regulator":"IRDAI \u00b7 DPDP Act 2023",
+"use_case":"A single insurance claim looks legitimate in isolation \u2014 organized fraud only shows up in the links between claims. The engine traverses from a suspicious claim to its garage, claimant and policy, surfacing entities that recur across supposedly unrelated claims. The signal is shared-node density: one workshop at the centre of many 'accidents'.",
+"what_you_see":"Click an alert to investigate. Watch the engine light up a ring of claims all routed through one garage, then recommend referring the case to the Special Investigation Unit (SIU).",
+"object_types":[
+{
+"name":"Claim",
+"icon":"\ud83d\udcc4",
+"color":"#FF5630",
+"key_props":[
+"amount",
+"type",
+"status"
+]
+},
+{
+"name":"Garage",
+"icon":"\ud83d\udd27",
+"color":"#FFAB00",
+"key_props":[
+"name",
+"city",
+"empanelled"
+]
+},
+{
+"name":"Claimant",
+"icon":"\ud83d\udc64",
+"color":"#4C9AFF",
+"key_props":[
+"name",
+"phone"
+]
+},
+{
+"name":"Policy",
+"icon":"\ud83d\udccb",
+"color":"#998DD9",
+"key_props":[
+"sum_insured",
+"product"
+]
+}
+],
+"link_types":[
+"serviced_by",
+"filed_by",
+"under_policy",
+"raised_on"
+],
+"kpi_cards":[
+{
+"label":"Open SIU cases",
+"value":"1",
+"delta":"\u20b95.6L exposure"
+},
+{
+"label":"Claims in ring",
+"value":"6",
+"delta":null
+},
+{
+"label":"Suspect garages",
+"value":"1",
+"delta":null
+}
+],
+"signals":[
+{
+"id":"shared_attribute_ring",
+"label":"Shared-garage ring",
+"why":"Many ostensibly unrelated claims routed through one non-empanelled garage.",
+"params":{
+"hub_type":"Garage",
+"min_members":5,
+"typology":"shared_garage_ring"
+}
+}
+],
+"actions":[
+{
+"id":"refer_to_siu",
+"label":"Refer to SIU",
+"requires_approval":true
+}
+],
+"sample_data_path":"data/verticals/insurance.json",
+"golden_cache_key":"insurance_siu"
+},
+{
+"key":"lending_ews",
+"name":"Lending \u2014 Early Warning Signals",
+"icon":"\ud83c\udfe6",
+"accent_color":"#00B8D9",
+"tagline":"Predict NPA stress before DPD \u2014 common-director contagion + EMI bounces.",
+"regulator":"RBI EWS (>\u20b95 Cr) \u00b7 Digital Lending 2022",
+"use_case":"Loans rarely go bad overnight; stress is visible months before an account is classified a Non-Performing Asset (NPA), but the signals sit scattered across systems. The engine traverses from a borrower to its loans, directors and repayment history to assemble a live risk picture \u2014 catching distress spreading through a shared-control network before it surfaces in the books.",
+"what_you_see":"Click an alert to investigate. Watch the engine cluster borrowers under one common director and flag EMI-bounce stress, then propose a margin call or a credit-rating downgrade.",
+"object_types":[
+{
+"name":"Borrower",
+"icon":"\ud83c\udfe2",
+"color":"#00B8D9",
+"key_props":[
+"name",
+"rating"
+]
+},
+{
+"name":"Loan",
+"icon":"\ud83d\udcb3",
+"color":"#36B37E",
+"key_props":[
+"exposure",
+"dpd"
+]
+},
+{
+"name":"Director",
+"icon":"\ud83d\udc54",
+"color":"#FFAB00",
+"key_props":[
+"name",
+"din"
+]
+},
+{
+"name":"Inflow",
+"icon":"\ud83d\udca7",
+"color":"#998DD9",
+"key_props":[
+"amount",
+"kind"
+]
+}
+],
+"link_types":[
+"governed_by",
+"lent_to",
+"credited_to",
+"raised_on"
+],
+"kpi_cards":[
+{
+"label":"Stressed exposures",
+"value":"\u20b95 Cr",
+"delta":null
+},
+{
+"label":"Borrowers in cluster",
+"value":"5",
+"delta":null
+},
+{
+"label":"Common directors",
+"value":"1",
+"delta":"contagion hub"
+}
+],
+"signals":[
+{
+"id":"shared_attribute_ring",
+"label":"Common-director cluster",
+"why":"Multiple borrowers governed by one director \u2014 correlated stress.",
+"params":{
+"hub_type":"Director",
+"min_members":5,
+"typology":"common_director_cluster"
+}
+},
+{
+"id":"threshold_cluster",
+"label":"EMI-bounce stress",
+"why":"A borrower receiving many sub-threshold partial EMIs \u2014 distress.",
+"params":{
+"member_type":"Borrower",
+"link_type":"credited_to_in",
+"amount_prop":"amount",
+"threshold":10000,
+"min_count":5,
+"typology":"emi_bounce_stress"
+}
+}
+],
+"actions":[
+{
+"id":"margin_call",
+"label":"Issue margin call",
+"requires_approval":true
+},
+{
+"id":"downgrade_rating",
+"label":"Downgrade rating",
+"requires_approval":true
+}
+],
+"sample_data_path":"data/verticals/lending.json",
+"golden_cache_key":"lending_ews"
+},
+{
+"key":"wealth",
+"name":"Wealth \u2014 Suitability & Mis-selling",
+"icon":"\ud83d\udcc8",
+"accent_color":"#36B37E",
+"tagline":"SEBI suitability breaches \u2014 the audit log IS the compliance artifact.",
+"regulator":"SEBI IA Regs 2013 \u00b7 SCORES",
+"use_case":"Advisers face incentives to push high-commission products onto clients they don't fit, exposing the firm to regulator action and restitution. The engine traverses from a client to their suitability profile, sales, products and adviser, comparing what was sold against the client's documented risk appetite \u2014 and flags advisers who breach repeatedly across a book.",
+"what_you_see":"Click an alert to investigate. Watch the engine surface an adviser who sold a high-risk product to many low-risk-profile clients, then propose flagging the mis-selling for compliance.",
+"object_types":[
+{
+"name":"Adviser",
+"icon":"\ud83e\uddd1\u200d\ud83d\udcbc",
+"color":"#36B37E",
+"key_props":[
+"name",
+"arn"
+]
+},
+{
+"name":"Sale",
+"icon":"\ud83e\uddfe",
+"color":"#FF5630",
+"key_props":[
+"amount",
+"product"
+]
+},
+{
+"name":"Client",
+"icon":"\ud83d\udc64",
+"color":"#4C9AFF",
+"key_props":[
+"name"
+]
+},
+{
+"name":"SuitabilityProfile",
+"icon":"\ud83d\udcca",
+"color":"#998DD9",
+"key_props":[
+"risk_appetite",
+"horizon"
+]
+},
+{
+"name":"Product",
+"icon":"\ud83d\udce6",
+"color":"#FFAB00",
+"key_props":[
+"name",
+"risk"
+]
+}
+],
+"link_types":[
+"sold_by",
+"sold_to",
+"of_product",
+"has_profile",
+"raised_on"
+],
+"kpi_cards":[
+{
+"label":"Mis-sold value",
+"value":"\u20b91 Cr",
+"delta":"5 clients"
+},
+{
+"label":"Suitability breaches",
+"value":"5",
+"delta":null
+},
+{
+"label":"Advisers flagged",
+"value":"1",
+"delta":null
+}
+],
+"signals":[
+{
+"id":"shared_attribute_ring",
+"label":"Adviser mis-selling cluster",
+"why":"One adviser sold a high-risk product to many low-risk-profile clients.",
+"params":{
+"hub_type":"Adviser",
+"min_members":5,
+"typology":"suitability_mismatch"
+}
+}
+],
+"actions":[
+{
+"id":"flag_misselling",
+"label":"Flag mis-selling",
+"requires_approval":true
+}
+],
+"sample_data_path":"data/verticals/wealth.json",
+"golden_cache_key":"wealth"
+},
+{
+"key":"corporate",
+"name":"Corporate \u2014 UBO / Ownership",
+"icon":"\ud83c\udfe2",
+"accent_color":"#998DD9",
+"tagline":"Unwind circular ownership to the true beneficial owner \u2014 pure OAG.",
+"regulator":"RBI CDD/EDD \u00b7 FATF Rec 24",
+"use_case":"Regulators require knowing the real human Ultimate Beneficial Owner (UBO) behind a corporate customer, but ownership is deliberately obscured through layered holdings across jurisdictions. The engine traverses the company-owns-company graph through multiple layers to compute effective control and resolve the true UBO \u2014 here the signal is the shape of the ownership graph itself.",
+"what_you_see":"Click an alert to investigate. Watch the engine unwind a loop of companies that own each other (hiding the owner) and a cluster sharing one UBO, then propose escalating to Enhanced Due Diligence (KYC review).",
+"object_types":[
+{
+"name":"Company",
+"icon":"\ud83c\udfe2",
+"color":"#998DD9",
+"key_props":[
+"name",
+"jurisdiction"
+]
+},
+{
+"name":"UBO",
+"icon":"\ud83d\udc51",
+"color":"#FF5630",
+"key_props":[
+"name",
+"nationality"
+]
+}
+],
+"link_types":[
+"owns",
+"declares_ubo",
+"raised_on"
+],
+"kpi_cards":[
+{
+"label":"Companies in loop",
+"value":"3",
+"delta":"circular"
+},
+{
+"label":"Shared UBO",
+"value":"1",
+"delta":null
+},
+{
+"label":"Offshore shells",
+"value":"2",
+"delta":null
+}
+],
+"signals":[
+{
+"id":"circular_flow",
+"label":"Circular ownership",
+"why":"Holding companies own each other in a loop, obscuring the UBO.",
+"params":{
+"node_type":"Company",
+"link_type":"owns",
+"typology":"circular_ownership"
+}
+},
+{
+"id":"shared_attribute_ring",
+"label":"Shared-UBO cluster",
+"why":"Many companies declare one common ultimate beneficial owner.",
+"params":{
+"hub_type":"UBO",
+"min_members":5,
+"typology":"shared_ubo_cluster"
+}
+}
+],
+"actions":[
+{
+"id":"escalate_kyc_review",
+"label":"Escalate KYC review",
+"requires_approval":true
+}
+],
+"sample_data_path":"data/verticals/corporate.json",
+"golden_cache_key":"corporate"
+}
+],
+"counters":{
+"ontologies":6,
+"object_types":18,
+"link_types":18,
+"actions":6
+}
+}

@@ -1,0 +1,18 @@
+{
+"type":"Customer",
+"id":"CUST-ACC-BENEF-STRUCT",
+"properties":{
+"customer_id":"CUST-ACC-BENEF-STRUCT",
+"name":"Apex Holdings (beneficiary)",
+"kyc_risk_rating":"high",
+"pep_flag":0,
+"nationality":"IN",
+"occupation":"self-employed",
+"onboarding_date":"2025-05-19T00:00:00"
+},
+"linked_ids":{
+"owns":[
+"ACC-BENEF-STRUCT"
+]
+}
+}

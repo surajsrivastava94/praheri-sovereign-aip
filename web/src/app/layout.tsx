@@ -4,6 +4,7 @@ import { inter, ibmPlexMono } from "./fonts";
 import { Providers } from "./providers";
 import { Sidebar } from "@/components/Sidebar";
 import { DemoOverlay } from "@/components/DemoOverlay";
+import { DemoBanner } from "@/components/DemoBanner";
 
 export const metadata: Metadata = {
   title: "Praheri — Sovereign AIP Console",
@@ -20,6 +21,7 @@ export default function RootLayout({
           <div className="flex h-screen">
             <Sidebar />
             <main className="flex-1 overflow-y-auto">
+              <DemoBanner />
               <DemoOverlay />
               {children}
             </main>

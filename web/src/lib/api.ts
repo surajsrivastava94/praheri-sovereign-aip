@@ -1,13 +1,20 @@
 // All calls go through the Next rewrite proxy (/api/* -> FastAPI :8800), so the
 // browser sees same-origin (no CORS, SSE-friendly).
+//
+// In DEMO mode (static export, no backend) these branch to the demo resolver,
+// which serves baked-in JSON snapshots of the real engine. Components never know.
+
+import { DEMO, demoGet, demoPost } from "@/lib/demoResolver";
 
 export async function getJSON<T>(path: string): Promise<T> {
+  if (DEMO) return demoGet<T>(path);
   const r = await fetch(path);
   if (!r.ok) throw new Error(`${path} → ${r.status}`);
   return r.json() as Promise<T>;
 }
 
 export async function postJSON<T>(path: string, body: unknown): Promise<T> {
+  if (DEMO) return demoPost<T>(path, body);
   const r = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
