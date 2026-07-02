@@ -208,6 +208,23 @@
   footer .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center}
   footer .mono{color:var(--muted)}
 
+  /* ---- progressive disclosure (native <details>, no JS — stays offline/sovereign) ---- */
+  .sub{color:var(--muted); margin-top:12px; font-size:1.02rem; line-height:1.55; max-width:64ch}
+  details.exp{margin-top:14px}
+  details.exp>summary{
+    list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); transition:color .18s var(--ease); width:fit-content;
+  }
+  details.exp>summary::-webkit-details-marker{display:none}
+  details.exp>summary:hover{color:#6cabff}
+  details.exp>summary .exp-ic{font-size:1.05rem; line-height:1; transition:transform .25s var(--ease-io); display:inline-block}
+  details.exp[open]>summary .exp-ic{transform:rotate(45deg)}
+  details.exp .exp-body{color:var(--muted); font-size:.98rem; line-height:1.62; margin-top:12px; max-width:64ch; animation:expIn .3s var(--ease)}
+  details.exp .exp-body p+p{margin-top:11px}
+  @keyframes expIn{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
+  @media(prefers-reduced-motion:reduce){ details.exp .exp-body{animation:none} details.exp>summary .exp-ic{transition:none} }
+
   /* ---- scroll reveal ---- */
   .reveal{opacity:0; transform:translateY(20px); transition:opacity .6s var(--ease), transform .5s var(--ease-io)}
   .reveal.in{opacity:1; transform:none}
@@ -240,7 +257,7 @@
   <div class="wrap">
     <span class="eyebrow reveal">Sovereign AIP · On-prem · Open-weight Llama · A design-partner proposal for BFSI</span>
     <h1 class="reveal" style="margin-top:18px">The investigation engine that <span style="color:var(--accent)">reasons over your world</span>, not text about it.</h1>
-    <p class="lede reveal">Praheri is a sovereign financial-crime platform built on a typed <b style="color:var(--text)">ontology</b> — a living digital twin of accounts, transactions, claims and companies. A local Llama traverses it to expose fraud rings, drafts the regulatory report, and <b style="color:var(--text)">proposes governed actions a human approves</b> — every step audited, nothing leaving the building. We're looking for one <b style="color:var(--text)">design partner</b> to harden it on real workflows — <a href="#jfs" style="color:var(--accent)">and we think that's Jio Financial Services</a>.</p>
+    <p class="lede reveal">A sovereign financial-crime platform: a local Llama reasons over a typed <b style="color:var(--text)">ontology</b> of your accounts, claims and companies to expose fraud rings and draft the regulatory report — every action human-approved, nothing leaving the building. We want one <b style="color:var(--text)">design partner</b> to harden it — <a href="#jfs" style="color:var(--accent)">we think that's Jio Financial Services</a>.</p>
     <div class="hero-cta reveal">
       <a class="btn btn-solid" href="http://localhost:8501" id="launch-hero">Launch the console →</a>
       <a class="btn" href="#ontology">What is the ontology?</a>
@@ -269,7 +286,11 @@
     <div class="sec-head reveal">
       <span class="eyebrow">The problem</span>
       <h2>An Indian bank cannot legally send this data to a frontier API.</h2>
-      <p>RBI data-localization makes the cloud copilot a non-starter — and a black-box API can't be audited, fine-tuned, or trusted with a freeze decision. Praheri is the alternative: the entire intelligence layer runs on-prem on open-weight Llama, over a typed model of the institution's own world, with a human in the loop on every consequential action.</p>
+      <p class="sub">So Praheri runs the entire intelligence layer on-prem, on open-weight Llama, with a human on every consequential action.</p>
+      <details class="exp reveal">
+        <summary><span class="exp-ic">+</span> Why the cloud copilot is a non-starter</summary>
+        <div class="exp-body"><p>RBI data-localization rules it out, and a black-box API can't be audited, fine-tuned, or trusted with a freeze decision. The alternative is a model of the institution's own world that reasons in-building — sovereign and capable at once.</p></div>
+      </details>
     </div>
   </div>
 </section>
@@ -282,14 +303,18 @@
     <div class="sec-head reveal">
       <span class="eyebrow">The foundation — the Ontology</span>
       <h2>Not a database. A digital twin of the organization.</h2>
-      <p>Borrowing Palantir's framing: the ontology is a <b style="color:var(--text)">semantic layer</b> — the nouns and how they relate — and a <b style="color:var(--text)">kinetic layer</b> — how decisions are written back as governed actions. Your data stops being rows in a table and becomes a live, connected map of reality that both analysts and AI can reason over.</p>
+      <p class="sub">Your data stops being rows in a table and becomes a live, connected map of reality that analysts and AI reason over together.</p>
+      <details class="exp reveal">
+        <summary><span class="exp-ic">+</span> The two layers</summary>
+        <div class="exp-body"><p>Borrowing Palantir's framing: a <b style="color:var(--text)">semantic layer</b> — the nouns and how they relate — and a <b style="color:var(--text)">kinetic layer</b> — how decisions are written back as governed actions.</p></div>
+      </details>
     </div>
     <div class="layers">
       <div class="layer reveal">
         <span class="tag">Semantic ·<br>Objects</span>
         <div>
           <h3>Typed objects with properties</h3>
-          <p>Every real-world entity becomes a typed object — an <span class="mono" style="color:var(--accent)">Account</span>, a <span class="mono" style="color:var(--accent)">Transaction</span>, a <span class="mono" style="color:var(--accent)">Claim</span>, a <span class="mono" style="color:var(--accent)">Company</span> — carrying its own properties. An object type is the table; an object is the row.</p>
+          <p>Every entity is a typed object — <span class="mono" style="color:var(--accent)">Account</span>, <span class="mono" style="color:var(--accent)">Transaction</span>, <span class="mono" style="color:var(--accent)">Claim</span>, <span class="mono" style="color:var(--accent)">Company</span> — with its own properties.</p>
           <div class="chips"><span class="chip">type</span><span class="chip">id</span><span class="chip">properties{}</span></div>
         </div>
       </div>
@@ -297,7 +322,7 @@
         <span class="tag">Semantic ·<br>Links</span>
         <div>
           <h3>Typed links between objects</h3>
-          <p>Relationships are first-class and typed — <span class="mono" style="color:var(--accent)">sent →</span>, <span class="mono" style="color:var(--accent)">serviced_by →</span>, <span class="mono" style="color:var(--accent)">owns →</span>. The links <i>are</i> the structure, so tracing a ring six hops out is a native graph traversal, not a recursive SQL nightmare.</p>
+          <p>Relationships are first-class and typed — <span class="mono" style="color:var(--accent)">sent →</span>, <span class="mono" style="color:var(--accent)">owns →</span>. Tracing a ring six hops out is a native traversal, not a recursive SQL nightmare.</p>
           <div class="chips"><span class="chip">linked_ids[]</span><span class="chip">directed</span><span class="chip">traversable</span></div>
         </div>
       </div>
@@ -305,7 +330,7 @@
         <span class="tag">Kinetic ·<br>Actions</span>
         <div>
           <h3>Governed actions write decisions back</h3>
-          <p>The model never mutates data directly. It <b style="color:var(--text)">proposes</b> an action — freeze an account, file an STR, escalate a KYC review — which routes to a human approver and, on approval, is applied and audited. This is the closed loop: read the world → decide → act → the record updates.</p>
+          <p>The model never mutates data. It <b style="color:var(--text)">proposes</b> — freeze, file an STR, escalate KYC — a human approves, and it's applied and audited.</p>
           <div class="chips"><span class="chip">propose</span><span class="chip">human approves</span><span class="chip">audit log</span></div>
         </div>
       </div>
@@ -321,13 +346,13 @@
     <div class="sec-head reveal">
       <span class="eyebrow">The differentiator — OAG</span>
       <h2>RAG retrieves text about your world. OAG retrieves the world itself.</h2>
-      <p>Ontology-Augmented Generation feeds the model structured, typed, linked objects — not prose that <i>mentions</i> them. So the model reasons over ground-truth structure, and every claim it makes cites a real object ID. The fraud ring isn't described; it's traversed.</p>
+      <p class="sub">Ontology-Augmented Generation feeds the model typed, linked objects — not prose that mentions them — so every claim cites a real object ID. The ring isn't described; it's traversed.</p>
     </div>
     <div class="vs">
       <div class="card rag reveal">
         <div class="label">RAG · text retrieval</div>
         <h3>The model reads paragraphs and guesses</h3>
-        <p>Ten fuzzy case notes are retrieved as prose. The model re-parses English to infer who connects to whom — and may invent a link that was never written, or miss one that was.</p>
+        <p>Case notes come back as prose. The model re-parses English to infer who connects to whom — and may invent a link, or miss one.</p>
         <div class="ex">"Account 4471 received several
 transfers in March; the holder
 shares an address with a customer
@@ -339,7 +364,7 @@ flagged last year…"
       <div class="card oag reveal">
         <div class="label">OAG · ontology retrieval</div>
         <h3>The model traverses real structure</h3>
-        <p>The same ring is retrieved as typed objects with their actual links. The model follows the edges, sees the cycle, and names every node by ID. The structure is the evidence.</p>
+        <p>The same ring comes back as typed objects with real links. The model follows the edges, sees the cycle, names every node by ID. The structure is the evidence.</p>
         <div class="ex">{ type:<span class="id">"Account"</span>, id:<span class="id">"ACC-4471"</span>,
   properties:{ risk: 0.91 },
   linked_ids:[<span class="id">"TXN-99"</span>,<span class="id">"TXN-102"</span>] }
@@ -359,23 +384,23 @@ flagged last year…"
     <div class="sec-head reveal">
       <span class="eyebrow">The wedge — why BFSI, why now</span>
       <h2>Financial crime is a graph problem, at the exact moment sovereign LLMs became viable.</h2>
-      <p>We chose Banking, Financial Services &amp; Insurance deliberately — it is where the pain, the regulation, and the data-shape all point at the same architecture. Three forces just converged:</p>
+      <p class="sub">In BFSI the pain, the regulation and the data-shape all point at the same architecture. Three forces just converged:</p>
     </div>
     <div class="grid3">
       <div class="pcard reveal">
         <span class="n">01 · THE CRIME</span>
         <h3>Fraud lives in the links</h3>
-        <p>Laundering, staged-claim rings and shell ownership are, by definition, <b style="color:var(--text)">patterns of connection</b> — not properties of any single row. A relationship-native ontology is the correct data model for the problem; flat tables and text chunks are not.</p>
+        <p>Laundering, staged-claim rings and shell ownership are <b style="color:var(--text)">patterns of connection</b>, not properties of a single row. A relationship-native ontology is the right data model; flat tables aren't.</p>
       </div>
       <div class="pcard reveal">
         <span class="n">02 · THE MANDATE</span>
         <h3>Regulation forbids the easy answer</h3>
-        <p>RBI data-localization and the DPDP Act make a frontier-cloud copilot a non-starter for this data. BFSI can't send customer transactions to a US API — so the only compliant path is <b style="color:var(--text)">on-prem, open-weight, auditable</b>. That constraint is our moat.</p>
+        <p>RBI data-localization and the DPDP Act rule out a frontier-cloud copilot for this data. The only compliant path is <b style="color:var(--text)">on-prem, open-weight, auditable</b> — and that constraint is our moat.</p>
       </div>
       <div class="pcard reveal">
         <span class="n">03 · THE UNLOCK</span>
         <h3>Open weights are finally good enough</h3>
-        <p>Llama-class models can now classify a typology and draft a filing-grade narrative on a single on-prem box. The capability that used to require a frontier API now runs <b style="color:var(--text)">inside the building</b> — for the first time, sovereign and capable are no longer a trade-off.</p>
+        <p>Llama-class models now classify a typology and draft a filing-grade narrative on a single on-prem box. What used to need a frontier API runs <b style="color:var(--text)">inside the building</b> — sovereign and capable, no longer a trade-off.</p>
       </div>
     </div>
   </div>
@@ -389,13 +414,13 @@ flagged last year…"
     <div class="sec-head reveal">
       <span class="eyebrow">The honest division of labour</span>
       <h2>We didn't replace ML with an LLM. We use each for what it's actually best at.</h2>
-      <p>Classic graph algorithms and rules engines are <i>better</i> than any LLM at <b style="color:var(--text)">finding</b> a ring — so that's exactly what does the detection here, in deterministic Python. The Llama earns its place on the two jobs traditional ML structurally <i>cannot</i> do. This is why the recommendation is trustworthy and the platform generalizes.</p>
+      <p class="sub">Graph algorithms and rules <i>find</i> the ring — better than any LLM — so they do the detection, in deterministic Python. Llama does the two jobs ML structurally can't.</p>
     </div>
     <div class="vs">
       <div class="card rag reveal">
         <div class="label">Deterministic engine · does the finding</div>
         <h3>Graph + rules detect the ring</h3>
-        <p>Ring traversal, structuring / circular-flow / shared-device detection and the risk floor are pure code — reproducible, auditable, no hallucination. A fired signal is a <i>confirmed</i> typology the model may escalate but can never downgrade to CLEAR.</p>
+        <p>Ring traversal, structuring / circular-flow detection and the risk floor are pure code — reproducible, auditable, no hallucination. A fired signal is a <i>confirmed</i> typology the model can escalate but never downgrade to CLEAR.</p>
         <div class="ex">traverse_ring()  → the network
 compute_signals() → the typology
 deterministic floor → never un-flags
@@ -406,8 +431,12 @@ deterministic floor → never un-flags
       <div class="card oag reveal">
         <div class="label">Llama · does what ML can't</div>
         <h3>Synthesis + generalization</h3>
-        <p><b style="color:var(--text)">1 · It writes the report a human can sign.</b> Graph algorithms output a diagram and a risk score. But the compliance officer has to file an actual written report — plain English that names each account and transaction and explains, in words, why it's suspicious. Writing that report, grounded in the bank's own rules, is exactly what an LLM is good at and a graph model can't do. <span style="color:var(--faint)">(A filing-grade STR for FIU-IND, citing real object IDs.)</span></p>
-        <p><b style="color:var(--text)">2 · One brain works for every department.</b> A traditional fraud model must be custom-built and re-trained for each area — one for banking, a separate one for insurance, another for lending — each needing its own data and its own team. The same Llama handles all of them by just swapping the settings file. No retraining, no new team per sector. <span style="color:var(--faint)">(Zero per-domain feature engineering or labelled training set.)</span></p>
+        <p><b style="color:var(--text)">1 · It writes the report a human can sign.</b> Graph output is a diagram and a score; the officer must file plain English. <span style="color:var(--faint)">(A filing-grade STR for FIU-IND, citing real IDs.)</span></p>
+        <p><b style="color:var(--text)">2 · One brain works for every department.</b> Swap the settings file, not the model — no per-sector retraining. <span style="color:var(--faint)">(Zero per-domain feature engineering or labelled set.)</span></p>
+        <details class="exp">
+          <summary><span class="exp-ic">+</span> Why ML can't do these</summary>
+          <div class="exp-body"><p>A graph model outputs a diagram and a risk score, but the compliance officer has to file a written report that names each account and explains, in words, why it's suspicious — grounded in the bank's own rules. That's what an LLM does and a graph model can't.</p><p>And a traditional fraud model must be custom-built and re-trained per area — one for banking, another for insurance — each with its own data and team. The same Llama handles all of them by swapping the config.</p></div>
+        </details>
         <div class="ex">"Accounts <span class="id">ACC-MULE-01</span>…<span class="id">06</span> each received
 sub-₹50k deposits then funnelled to
 <span class="id">ACC-BENEF-STRUCT</span> — structuring under
@@ -607,7 +636,7 @@ sub-₹50k deposits then funnelled to
     <div class="sec-head reveal">
       <span class="eyebrow">The proposal — design partner</span>
       <h2>Why Jio Financial Services, and how we'd build it together.</h2>
-      <p>JFS is the rare institution whose group spans <b style="color:var(--text)">every sector this engine already runs</b> — payments, lending, insurance, asset management — under one roof, at Reliance scale, greenfield enough to build compliance-native rather than retrofit it. We're not selling a finished product; we're proposing a <b style="color:var(--text)">design partnership</b> to harden Phase 1 on your real AML and insurance workflows.</p>
+      <p class="sub">JFS spans <b style="color:var(--text)">every sector this engine already runs</b> — payments, lending, insurance, asset management — at Reliance scale, greenfield enough to build compliance-native. We're proposing a <b style="color:var(--text)">design partnership</b> to harden Phase 1 on your real workflows.</p>
     </div>
 
     <!-- their offerings -> our mapping -->
@@ -709,7 +738,7 @@ sub-₹50k deposits then funnelled to
     <div class="cta-band reveal">
       <span class="eyebrow">See it run</span>
       <h2 style="margin-top:14px">Pick an alert. Watch the ring light up.</h2>
-      <p>The live console runs the full loop: triage an alert, traverse the ontology, expose the fraud ring, draft the report, propose a freeze, approve it as the MLRO, and read the audit trail — all on-prem, with no network egress.</p>
+      <p>The live console runs the full loop — triage, traverse, expose the ring, draft the report, propose a freeze, approve as MLRO, read the audit trail — all on-prem, zero egress.</p>
       <div class="hero-cta">
         <a class="btn btn-solid" href="https://github.com/surajsrivastava94/praheri-sovereign-aip" target="_blank" rel="noopener" id="launch-cta">View source on GitHub →</a>
         <a class="btn" href="#run">Run it locally →</a>
@@ -728,7 +757,7 @@ sub-₹50k deposits then funnelled to
     <div class="sec-head reveal">
       <span class="eyebrow">Run it yourself</span>
       <h2>Five commands. Your machine. Zero egress.</h2>
-      <p>The console is open source and runs entirely on-prem on open-weight Llama via Ollama. Clone it, point it at a local model, and the full investigation loop runs with no network calls.</p>
+      <p class="sub">Open source, on-prem, open-weight Llama via Ollama. Clone it, point at a local model, and the full loop runs with no network calls.</p>
     </div>
     <div class="runcard reveal">
       <div class="runcard-head"><span class="dotrow"><i></i><i></i><i></i></span><span class="rf">terminal</span></div>
