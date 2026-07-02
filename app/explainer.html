@@ -756,8 +756,8 @@ sub-₹50k deposits then funnelled to
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow">Run it yourself</span>
-      <h2>Five commands. Your machine. Zero egress.</h2>
-      <p class="sub">Open source, on-prem, open-weight Llama via Ollama. Clone it, point at a local model, and the full loop runs with no network calls.</p>
+      <h2>Your machine. Open-weight Llama. Zero egress.</h2>
+      <p class="sub">Open source, on-prem, served by Ollama. Clone it, point at a local model, and the same console you just explored runs the full loop with no network calls.</p>
     </div>
     <div class="runcard reveal">
       <div class="runcard-head"><span class="dotrow"><i></i><i></i><i></i></span><span class="rf">terminal</span></div>
@@ -778,8 +778,11 @@ ollama serve
 python -m praheri.generate
 python -m praheri.generate_verticals
 
-<span class="cm"># 5 · launch the console  →  http://localhost:8501</span>
-streamlit run app/streamlit_app.py</pre>
+<span class="cm"># 5 · start the on-prem engine API (FastAPI over the Llama engine)</span>
+uvicorn server.main:app --workers 1 --port 8800
+
+<span class="cm"># 6 · in a second terminal, launch the console  →  http://localhost:3000</span>
+cd web &amp;&amp; npm install &amp;&amp; npm run dev</pre>
     </div>
     <div class="run-foot reveal">
       <span class="run-note">No GPU required for the 8B demo model · synthetic data only · nothing leaves your box.</span>
