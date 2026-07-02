@@ -42,13 +42,22 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 shrink-0 border-r border-hairline bg-surface/60 flex flex-col">
-      <div className="px-5 py-5 border-b border-hairline">
+      {/* Brand → back to the explainer/overview. A plain <a> (not next/link) so it
+          resolves against the site root, not the /console basePath. */}
+      <a
+        href="/"
+        title="Back to overview"
+        className="block px-5 py-5 border-b border-hairline transition-colors hover:bg-surface-2 group"
+      >
         <div className="flex items-center gap-2.5">
           <span className="text-xl">🛡️</span>
           <span className="font-bold tracking-tight text-fg">Praheri</span>
+          <span className="ml-auto text-[0.7rem] font-mono text-muted opacity-70 transition-opacity group-hover:opacity-100 group-hover:text-accent">
+            ← Overview
+          </span>
         </div>
         <div className="eyebrow mt-2">Sovereign AIP</div>
-      </div>
+      </a>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {items.map((item) => {
           const active = path === item.href || path?.startsWith(item.href + "/");
